@@ -1,6 +1,6 @@
 # Commerce TurtleCoin
 
-Payment Gateway for Drupal Commerce to allow payments with TurtleCoin.
+Payment Gateway for Drupal Commerce to allow payments with [TurtleCoin](https://turtlecoin.lol).
 
 Work in progress. Under active development.
 

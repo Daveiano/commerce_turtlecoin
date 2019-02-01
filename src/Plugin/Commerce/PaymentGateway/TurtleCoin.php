@@ -15,10 +15,10 @@ use Drupal\commerce_price\Price;
  * @see https://docs.drupalcommerce.org/commerce2/developer-guide/payments/create-payment-gateway/on-site-gateways
  *
  * @CommercePaymentGateway(
- *   id = "turtlecoin_payment",
+ *   id = "turtlecoin_payment_gateway",
  *   label = @Translation("TurtleCoin"),
  *   display_label = @Translation("TurtleCoin"),
- *   payment_method_types = {"turtlecoin"},
+ *   payment_method_types = {"turtle_coin_transaction"},
  *   forms = {
  *     "add-payment-method" = "Drupal\commerce_turtlecoin\PluginForm\TurtleCoinPaymentMethodAddForm",
  *   },

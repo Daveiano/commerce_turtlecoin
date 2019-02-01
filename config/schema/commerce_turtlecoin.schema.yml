@@ -1,4 +1,4 @@
-commerce_payment.commerce_payment_gateway.plugin.turtlecoin_payment:
+commerce_payment.commerce_payment_gateway.plugin.turtlecoin_payment_gateway:
   type: commerce_payment_gateway_configuration
   mapping:
     wallet:
