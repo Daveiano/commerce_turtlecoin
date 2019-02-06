@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\commerce_payment\Entity\PaymentInterface;
 use Drupal\commerce_payment\Entity\PaymentMethodInterface;
 use Drupal\commerce_price\Price;
+use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
 
 /**
  * Provides the TurtleCoin onsite Checkout payment gateway.
@@ -31,7 +32,7 @@ class TurtleCoin extends OnsitePaymentGatewayBase implements TurtleCoinInterface
    */
   public function defaultConfiguration() {
     return [
-      'wallet' => '',
+      'turtlecoin_address_store' => '',
     ] + parent::defaultConfiguration();
   }
 
@@ -41,11 +42,11 @@ class TurtleCoin extends OnsitePaymentGatewayBase implements TurtleCoinInterface
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
-    $form['wallet'] = [
+    $form['turtlecoin_address_store'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Wallet address'),
-      '#description' => $this->t('Your own Wallet address where the payments will come in.'),
-      '#default_value' => $this->configuration['wallet'],
+      '#title' => $this->t('TurtleCoin address'),
+      '#description' => $this->t('Your stores wallet address where the payments will come in.'),
+      '#default_value' => $this->configuration['turtlecoin_address_store'],
       '#required' => TRUE,
     ];
 
@@ -55,10 +56,24 @@ class TurtleCoin extends OnsitePaymentGatewayBase implements TurtleCoinInterface
   /**
    * {@inheritdoc}
    */
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
+    parent::validateConfigurationForm($form, $form_state);
+
+    $values = $form_state->getValue($form['#parents']);
+
+    if (!TurtleCoinBaseController::validate($values['turtlecoin_address_store'])) {
+      $form_state->setError($form['turtlecoin_address_store'], t('You have entered an invalid TurtleCoin Address.'));
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::submitConfigurationForm($form, $form_state);
+
     $values = $form_state->getValue($form['#parents']);
-    $this->configuration['wallet'] = $values['wallet'];
+    $this->configuration['turtlecoin_address_store'] = $values['turtlecoin_address_store'];
   }
 
   /**
