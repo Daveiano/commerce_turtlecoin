@@ -19,9 +19,9 @@ use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
  *   id = "turtlecoin_payment_gateway",
  *   label = @Translation("TurtleCoin"),
  *   display_label = @Translation("TurtleCoin"),
- *   payment_method_types = {"turtle_coin_transaction"},
+ *   payment_method_types = {"commerce_turtlecoin_transaction"},
  *   forms = {
- *     "add-payment-method" = "Drupal\commerce_turtlecoin\PluginForm\TurtleCoinPaymentMethodAddForm",
+ *     "add-payment" = "Drupal\commerce_turtlecoin\PluginForm\TurtleCoinPaymentMethodAddForm",
  *   },
  * )
  */
@@ -59,10 +59,12 @@ class TurtleCoin extends OnsitePaymentGatewayBase implements TurtleCoinInterface
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::validateConfigurationForm($form, $form_state);
 
-    $values = $form_state->getValue($form['#parents']);
+    if (!$form_state->getErrors()) {
+      $values = $form_state->getValue($form['#parents']);
 
-    if (!TurtleCoinBaseController::validate($values['turtlecoin_address_store'])) {
-      $form_state->setError($form['turtlecoin_address_store'], t('You have entered an invalid TurtleCoin Address.'));
+      if (!TurtleCoinBaseController::validate($values['turtlecoin_address_store'])) {
+        $form_state->setError($form['turtlecoin_address_store'], t('You have entered an invalid TurtleCoin Address.'));
+      }
     }
   }
 
@@ -78,6 +80,9 @@ class TurtleCoin extends OnsitePaymentGatewayBase implements TurtleCoinInterface
 
   /**
    * {@inheritdoc}
+   *
+   * Called when the Pay and complete purchase button has been clicked on the
+   * final page of the checkout process: the Review page.
    */
   public function createPayment(PaymentInterface $payment, $capture = TRUE) {
 
@@ -85,9 +90,15 @@ class TurtleCoin extends OnsitePaymentGatewayBase implements TurtleCoinInterface
 
   /**
    * {@inheritdoc}
+   *
+   * Called during the checkout process, when the Continue to review button
+   * has been clicked on the Order information page.
+   *
+   * @see GoCardless
    */
   public function createPaymentMethod(PaymentMethodInterface $payment_method, array $payment_details) {
-
+    $payment_method->setReusable(TRUE);
+    $payment_method->save();
   }
 
   /**

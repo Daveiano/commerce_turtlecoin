@@ -2,7 +2,7 @@
 
 namespace Drupal\commerce_turtlecoin\PluginForm;
 
-use Drupal\commerce_payment\PluginForm\PaymentMethodAddForm;
+use Drupal\commerce_payment\PluginForm\PaymentMethodAddForm as BasePaymentMethodAddForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
 
@@ -13,14 +13,23 @@ use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
  *
  * @package Drupal\commerce_payment_example\PluginForm\TurtleCoinPaymentMethodAddForm
  */
-class TurtleCoinPaymentMethodAddForm extends PaymentMethodAddForm {
+class TurtleCoinPaymentMethodAddForm extends BasePaymentMethodAddForm {
 
   /**
    * {@inheritdoc}
    */
   protected function buildCreditCardForm(array $element, FormStateInterface $form_state) {
-    $element = parent::buildCreditCardForm($element, $form_state);
-    $element['turtle_address']['#default_value'] = '';
+    $element['#attributes']['class'][] = 'credit-card-form';
+
+    $element['turtlecoin_address_customer'] = [
+      '#type' => 'textfield',
+      '#title' => t('TurtleCoin address'),
+      '#description' => t('Please enter your TurtleCoin address.'),
+      '#default_value' => '',
+      '#maxlength' => 99,
+      '#size' => 99,
+      '#required' => TRUE,
+    ];
 
     return $element;
   }
@@ -31,8 +40,8 @@ class TurtleCoinPaymentMethodAddForm extends PaymentMethodAddForm {
   protected function validateCreditCardForm(array &$element, FormStateInterface $form_state) {
     $values = $form_state->getValue($element['#parents']);
 
-    if (!TurtleCoinBaseController::validate($values['turtle_address'])) {
-      $form_state->setError($element['turtle_address'], t('You have entered an invalid TurtleCoin Address.'));
+    if (!TurtleCoinBaseController::validate($values['turtlecoin_address_customer'])) {
+      $form_state->setError($element['turtlecoin_address_customer'], t('You have entered an invalid TurtleCoin Address.'));
     }
   }
 

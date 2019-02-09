@@ -18,7 +18,7 @@ class TurtleCoinBaseController extends ControllerBase {
    * @return bool
    *   Valid or Invalid.
    */
-  public function validate($turtlecoin_address) {
+  public static function validate($turtlecoin_address) {
     if (strlen($turtlecoin_address) == 99 && substr($turtlecoin_address, 4)) {
       return TRUE;
     }
