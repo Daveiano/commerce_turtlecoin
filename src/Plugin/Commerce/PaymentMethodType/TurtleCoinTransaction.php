@@ -4,6 +4,7 @@ namespace Drupal\commerce_turtlecoin\Plugin\Commerce\PaymentMethodType;
 
 use Drupal\commerce_payment\Plugin\Commerce\PaymentMethodType\PaymentMethodTypeBase;
 use Drupal\commerce_payment\Entity\PaymentMethodInterface;
+use Drupal\entity\BundleFieldDefinition;
 
 /**
  * Provides the Turtle payment method type.
@@ -18,10 +19,32 @@ class TurtleCoinTransaction extends PaymentMethodTypeBase {
 
   /**
    * {@inheritdoc}
+   *
+   * Gets shown in the Payment information payment pane.
    */
   public function buildLabel(PaymentMethodInterface $payment_method) {
-    // TODO: Implement buildLabel() method.
-    return 'What does this?';
+    // @todo: Implement buildLabel() method.
+    $args = [
+      '@turtlecoin_address_customer' => $payment_method->turtlecoin_address_customer->value,
+    ];
+
+    return $this->t('TurtleCoin Address for payment used: @turtlecoin_address_customer', $args);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @todo does this config produce the strange table 'commerce_payment_method_358...'?
+   */
+  public function buildFieldDefinitions() {
+    $fields = parent::buildFieldDefinitions();
+
+    $fields['turtlecoin_address_customer'] = BundleFieldDefinition::create('string')
+      ->setLabel(t('TurtleCoin address'))
+      ->setDescription(t('The user-entered TRTL address.'))
+      ->setRequired(TRUE);
+
+    return $fields;
   }
 
 }

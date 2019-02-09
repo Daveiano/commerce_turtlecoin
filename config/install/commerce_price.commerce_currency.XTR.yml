@@ -3,3 +3,9 @@ name: TurtleCoin
 numericCode: '000'
 symbol: TRTL
 fractionDigits: 2
+dependencies:
+  module:
+    - commerce_turtlecoin
+  enforced:
+    module:
+      - commerce_turtlecoin

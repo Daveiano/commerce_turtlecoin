@@ -21,7 +21,7 @@ use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
  *   display_label = @Translation("TurtleCoin"),
  *   payment_method_types = {"commerce_turtlecoin_transaction"},
  *   forms = {
- *     "add-payment" = "Drupal\commerce_turtlecoin\PluginForm\TurtleCoinPaymentMethodAddForm",
+ *     "add-payment-method" = "Drupal\commerce_turtlecoin\PluginForm\TurtleCoinPaymentMethodAddForm",
  *   },
  * )
  */
@@ -85,7 +85,25 @@ class TurtleCoin extends OnsitePaymentGatewayBase implements TurtleCoinInterface
    * final page of the checkout process: the Review page.
    */
   public function createPayment(PaymentInterface $payment, $capture = TRUE) {
+    $this->assertPaymentState($payment, ['new']);
+    $payment_method = $payment->getPaymentMethod();
+    $this->assertPaymentMethod($payment_method);
+    $amount = $payment->getAmount();
 
+    // Perform verifications related to billing address, payment currency, etc.
+    // Throw exceptions as needed.
+    // See \Drupal\commerce_payment\Exception for the available exceptions.
+
+    // @todo Perform the create payment request here, throw an exception if it fails.
+    // Remember to take into account $capture when performing the request.
+    //$payment_method_token = $payment_method->getRemoteId();
+    // The remote ID returned by the request.
+    $remote_id = '123456';
+
+    $next_state = $capture ? 'completed' : 'authorization';
+    $payment->setState($next_state);
+    $payment->setRemoteId($remote_id);
+    $payment->save();
   }
 
   /**
@@ -97,6 +115,24 @@ class TurtleCoin extends OnsitePaymentGatewayBase implements TurtleCoinInterface
    * @see GoCardless
    */
   public function createPaymentMethod(PaymentMethodInterface $payment_method, array $payment_details) {
+    $required_keys = [
+      // The expected keys are payment gateway specific and usually match
+      // the PaymentMethodAddForm form elements. They are expected to be valid.
+      'turtlecoin_address_customer',
+    ];
+    foreach ($required_keys as $required_key) {
+      if (empty($payment_details[$required_key])) {
+        throw new \InvalidArgumentException(sprintf('$payment_details must contain the %s key.', $required_key));
+      }
+    }
+
+    // Perform the create request here, throw an exception if it fails.
+    // See \Drupal\commerce_payment\Exception for the available exceptions.
+    // You might need to do different API requests based on whether the
+    // payment method is reusable: $payment_method->isReusable().
+    // Non-reusable payment methods usually have an expiration timestamp.
+    $payment_method->turtlecoin_address_customer = $payment_details['turtlecoin_address_customer'];
+
     $payment_method->setReusable(TRUE);
     $payment_method->save();
   }
