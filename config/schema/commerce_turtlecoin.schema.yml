@@ -4,3 +4,12 @@ commerce_payment.commerce_payment_gateway.plugin.turtlecoin_payment_gateway:
     turtlecoin_address_store:
       type: string
       label: 'TurtleCoin address'
+    wallet_api_host:
+      type: string
+      label: 'The host where your wallet-api is available.'
+    wallet_api_port:
+      type: string
+      label: 'The port where your wallet-api is available.'
+    wallet_api_password:
+      type: string
+      label: 'The password the wallet-api uses to authorize.'

@@ -42,11 +42,33 @@ class TurtleCoin extends OnsitePaymentGatewayBase implements TurtleCoinInterface
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
+    // TODO: Do we need the address?
     $form['turtlecoin_address_store'] = [
       '#type' => 'textfield',
       '#title' => $this->t('TurtleCoin address'),
       '#description' => $this->t('Your stores wallet address where the payments will come in.'),
       '#default_value' => $this->configuration['turtlecoin_address_store'],
+      '#required' => TRUE,
+    ];
+    $form['wallet_api_host'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Wallet-API host'),
+      '#description' => $this->t('The host where your wallet-api is available.'),
+      '#default_value' => $this->configuration['wallet_api_host'],
+      '#required' => TRUE,
+    ];
+    $form['wallet_api_port'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Wallet-API port'),
+      '#description' => $this->t('The port where your wallet-api is available.'),
+      '#default_value' => $this->configuration['wallet_api_port'],
+      '#required' => TRUE,
+    ];
+    $form['wallet_api_password'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Wallet-API password'),
+      '#description' => $this->t('The password the wallet-api uses to authorize.'),
+      '#default_value' => $this->configuration['wallet_api_password'],
       '#required' => TRUE,
     ];
 
@@ -76,6 +98,9 @@ class TurtleCoin extends OnsitePaymentGatewayBase implements TurtleCoinInterface
 
     $values = $form_state->getValue($form['#parents']);
     $this->configuration['turtlecoin_address_store'] = $values['turtlecoin_address_store'];
+    $this->configuration['wallet_api_host'] = $values['wallet_api_host'];
+    $this->configuration['wallet_api_port'] = $values['wallet_api_port'];
+    $this->configuration['wallet_api_password'] = $values['wallet_api_password'];
   }
 
   /**
@@ -133,6 +158,7 @@ class TurtleCoin extends OnsitePaymentGatewayBase implements TurtleCoinInterface
     // Non-reusable payment methods usually have an expiration timestamp.
     $payment_method->turtlecoin_address_customer = $payment_details['turtlecoin_address_customer'];
 
+    // Creates a reusable payment method.
     $payment_method->setReusable(TRUE);
     $payment_method->save();
   }
