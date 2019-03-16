@@ -23,12 +23,7 @@ class TurtleCoinTransaction extends PaymentMethodTypeBase {
    * Gets shown in the Payment information payment pane.
    */
   public function buildLabel(PaymentMethodInterface $payment_method) {
-    // @todo: Implement buildLabel() method.
-    $args = [
-      '@turtlecoin_address_customer' => $payment_method->turtlecoin_address_customer->value,
-    ];
-
-    return $this->t('TurtleCoin Address for payment used: @turtlecoin_address_customer', $args);
+    return $this->t('TurtleCoin Address for payment used:');
   }
 
   /**
@@ -39,10 +34,10 @@ class TurtleCoinTransaction extends PaymentMethodTypeBase {
   public function buildFieldDefinitions() {
     $fields = parent::buildFieldDefinitions();
 
-    $fields['turtlecoin_address_customer'] = BundleFieldDefinition::create('string')
+    /*$fields['turtlecoin_address_customer'] = BundleFieldDefinition::create('string')
       ->setLabel(t('TurtleCoin address'))
       ->setDescription(t('The user-entered TRTL address.'))
-      ->setRequired(TRUE);
+      ->setRequired(TRUE);*/
 
     return $fields;
   }

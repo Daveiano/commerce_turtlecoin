@@ -3,6 +3,7 @@
 namespace Drupal\commerce_turtlecoin\Plugin\Commerce\PaymentGateway;
 
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OnsitePaymentGatewayBase;
+use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\PaymentGatewayBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\commerce_payment\Entity\PaymentInterface;
 use Drupal\commerce_payment\Entity\PaymentMethodInterface;
@@ -10,7 +11,7 @@ use Drupal\commerce_price\Price;
 use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
 
 /**
- * Provides the TurtleCoin onsite Checkout payment gateway.
+ * Provides the TurtleCoin Checkout payment gateway.
  *
  * @see https://docs.drupalcommerce.org/commerce2/developer-guide/payments/create-payment-gateway
  * @see https://docs.drupalcommerce.org/commerce2/developer-guide/payments/create-payment-gateway/on-site-gateways
@@ -19,13 +20,13 @@ use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
  *   id = "turtlecoin_payment_gateway",
  *   label = @Translation("TurtleCoin"),
  *   display_label = @Translation("TurtleCoin"),
- *   payment_method_types = {"commerce_turtlecoin_transaction"},
+ *   payment_type = "payment_turtle_coin",
  *   forms = {
- *     "add-payment-method" = "Drupal\commerce_turtlecoin\PluginForm\TurtleCoinPaymentMethodAddForm",
+ *     "add-payment" = "Drupal\commerce_turtlecoin\PluginForm\TurtleCoinPaymentAddForm",
  *   },
  * )
  */
-class TurtleCoin extends OnsitePaymentGatewayBase implements TurtleCoinInterface {
+class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
 
   /**
    * {@inheritdoc}
@@ -33,6 +34,9 @@ class TurtleCoin extends OnsitePaymentGatewayBase implements TurtleCoinInterface
   public function defaultConfiguration() {
     return [
       'turtlecoin_address_store' => '',
+      'wallet_api_host' => 'localhost',
+      'wallet_api_port' => '8070',
+      'wallet_api_password' => 'password',
     ] + parent::defaultConfiguration();
   }
 
@@ -105,14 +109,29 @@ class TurtleCoin extends OnsitePaymentGatewayBase implements TurtleCoinInterface
 
   /**
    * {@inheritdoc}
+   */
+  public function buildPaymentInstructions(PaymentInterface $payment) {
+    dsm('buildPaymentInstructions');
+
+    $instructions = [
+      '#type' => 'processed_text',
+      '#text' => 'TEST Text',
+      '#format' => 'plain_text',
+    ];
+
+    return $instructions;
+  }
+
+  /**
+   * {@inheritdoc}
    *
    * Called when the Pay and complete purchase button has been clicked on the
    * final page of the checkout process: the Review page.
    */
-  public function createPayment(PaymentInterface $payment, $capture = TRUE) {
+  public function createPayment(PaymentInterface $payment, $received = FALSE) {
     $this->assertPaymentState($payment, ['new']);
-    $payment_method = $payment->getPaymentMethod();
-    $this->assertPaymentMethod($payment_method);
+    /*$payment_method = $payment->getPaymentMethod();
+    $this->assertPaymentMethod($payment_method);*/
     $amount = $payment->getAmount();
 
     // Perform verifications related to billing address, payment currency, etc.
@@ -125,9 +144,9 @@ class TurtleCoin extends OnsitePaymentGatewayBase implements TurtleCoinInterface
     // The remote ID returned by the request.
     $remote_id = '123456';
 
-    $next_state = $capture ? 'completed' : 'authorization';
-    $payment->setState($next_state);
-    $payment->setRemoteId($remote_id);
+    $payment->state = $received ? 'completed' : 'pending';
+    $payment->save();
+    //$payment->setRemoteId($remote_id);
     $payment->save();
   }
 
@@ -139,62 +158,23 @@ class TurtleCoin extends OnsitePaymentGatewayBase implements TurtleCoinInterface
    *
    * @see GoCardless
    */
-  public function createPaymentMethod(PaymentMethodInterface $payment_method, array $payment_details) {
-    $required_keys = [
-      // The expected keys are payment gateway specific and usually match
-      // the PaymentMethodAddForm form elements. They are expected to be valid.
-      'turtlecoin_address_customer',
-    ];
-    foreach ($required_keys as $required_key) {
-      if (empty($payment_details[$required_key])) {
-        throw new \InvalidArgumentException(sprintf('$payment_details must contain the %s key.', $required_key));
-      }
-    }
-
+  /*public function createPaymentMethod(PaymentMethodInterface $payment_method, array $payment_details) {
     // Perform the create request here, throw an exception if it fails.
     // See \Drupal\commerce_payment\Exception for the available exceptions.
     // You might need to do different API requests based on whether the
     // payment method is reusable: $payment_method->isReusable().
     // Non-reusable payment methods usually have an expiration timestamp.
-    $payment_method->turtlecoin_address_customer = $payment_details['turtlecoin_address_customer'];
+    //$payment_method->turtlecoin_integrated_address_customer = $payment_details['turtlecoin_integrated_address_customer'];
 
     // Creates a reusable payment method.
-    $payment_method->setReusable(TRUE);
+    $payment_method->setReusable(FALSE);
     $payment_method->save();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function deletePaymentMethod(PaymentMethodInterface $payment_method) {
-
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function capturePayment(PaymentInterface $payment, Price $amount = NULL) {
-
-  }
+  }*/
 
   /**
    * {@inheritdoc}
    */
   public function voidPayment(PaymentInterface $payment) {
-
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function refundPayment(PaymentInterface $payment, Price $amount = NULL) {
-
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function updatePaymentMethod(PaymentMethodInterface $payment_method) {
 
   }
 
