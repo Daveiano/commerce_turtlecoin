@@ -3,6 +3,7 @@
 namespace Drupal\commerce_turtlecoin\Plugin\Commerce\PaymentType;
 
 use Drupal\commerce_payment\Plugin\Commerce\PaymentType\PaymentTypeBase;
+use Drupal\entity\BundleFieldDefinition;
 
 /**
  * Provides the turtle_coin payment type.
@@ -10,6 +11,7 @@ use Drupal\commerce_payment\Plugin\Commerce\PaymentType\PaymentTypeBase;
  * @CommercePaymentType(
  *   id = "payment_turtle_coin",
  *   label = @Translation("TurtleCoin"),
+ *   workflow = "payment_manual",
  * )
  */
 class PaymentTurtleCoin extends PaymentTypeBase {
@@ -18,7 +20,12 @@ class PaymentTurtleCoin extends PaymentTypeBase {
    * {@inheritdoc}
    */
   public function buildFieldDefinitions() {
-    return [];
+    $fields['turtle_coin_integrated_address'] = BundleFieldDefinition::create('string')
+      ->setLabel(t('TurtleCoin Integrated address'))
+      ->setDescription(t('The Integrated address used for the transaction.'))
+      ->setRequired(TRUE);
+
+    return $fields;
   }
 
 }

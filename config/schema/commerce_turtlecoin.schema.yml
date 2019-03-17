@@ -13,3 +13,10 @@ commerce_payment.commerce_payment_gateway.plugin.turtlecoin_payment_gateway:
     wallet_api_password:
       type: string
       label: 'The password the wallet-api uses to authorize.'
+
+commerce_payment.commerce_payment_type.plugin.payment_turtle_coin:
+  type: commerce_payment_type_configuration
+  mapping:
+    turtle_coin_integrated_address:
+      type: string
+      label: 'Integrated address'

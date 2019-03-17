@@ -2,13 +2,16 @@
 
 namespace Drupal\commerce_turtlecoin\Plugin\Commerce\PaymentGateway;
 
-use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OnsitePaymentGatewayBase;
+use Drupal\commerce_payment\PaymentMethodTypeManager;
+use Drupal\commerce_payment\PaymentTypeManager;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\PaymentGatewayBase;
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\commerce_payment\Entity\PaymentInterface;
-use Drupal\commerce_payment\Entity\PaymentMethodInterface;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
+use TurtleCoin\TurtleService;
 
 /**
  * Provides the TurtleCoin Checkout payment gateway.
@@ -20,13 +23,28 @@ use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
  *   id = "turtlecoin_payment_gateway",
  *   label = @Translation("TurtleCoin"),
  *   display_label = @Translation("TurtleCoin"),
- *   payment_type = "payment_turtle_coin",
  *   forms = {
  *     "add-payment" = "Drupal\commerce_turtlecoin\PluginForm\TurtleCoinPaymentAddForm",
+ *     "receive-payment" = "Drupal\commerce_turtlecoin\PluginForm\TurtleCoinPaymentReceiveForm",
  *   },
+ *   payment_type = "payment_turtle_coin",
  * )
  */
 class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
+
+  protected $turtleService;
+
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager, $time);
+
+    $config = [
+      'rpcHost' => $configuration['wallet_api_host'],
+      'rpcPort' => $configuration['wallet_api_port'],
+      'rpcPassword' => $configuration['wallet_api_password'],
+    ];
+
+    $this->turtleService = new TurtleService($config);
+  }
 
   /**
    * {@inheritdoc}
@@ -46,7 +64,6 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
-    // TODO: Do we need the address?
     $form['turtlecoin_address_store'] = [
       '#type' => 'textfield',
       '#title' => $this->t('TurtleCoin address'),
@@ -111,15 +128,38 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
    * {@inheritdoc}
    */
   public function buildPaymentInstructions(PaymentInterface $payment) {
-    dsm('buildPaymentInstructions');
+    ddl($payment->turtle_coin_integrated_address);
 
+    //dsm($payment->get('turtle_coin_integrated_address'));
     $instructions = [
       '#type' => 'processed_text',
-      '#text' => 'TEST Text',
+      '#text' => 'Please transfer the amount of ' . $payment->getAmount() . ' to ' . $payment->get('turtle_coin_integrated_address'),
       '#format' => 'plain_text',
     ];
 
     return $instructions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildPaymentOperations(PaymentInterface $payment) {
+    $payment_state = $payment->getState()->getId();
+    $operations = [];
+    $operations['receive'] = [
+      'title' => $this->t('Receive'),
+      'page_title' => $this->t('Receive payment'),
+      'plugin_form' => 'receive-payment',
+      'access' => $payment_state == 'pending',
+    ];
+    $operations['void'] = [
+      'title' => $this->t('Void'),
+      'page_title' => $this->t('Void payment'),
+      'plugin_form' => 'void-payment',
+      'access' => $payment_state == 'pending',
+    ];
+
+    return $operations;
   }
 
   /**
@@ -130,52 +170,69 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
    */
   public function createPayment(PaymentInterface $payment, $received = FALSE) {
     $this->assertPaymentState($payment, ['new']);
-    /*$payment_method = $payment->getPaymentMethod();
-    $this->assertPaymentMethod($payment_method);*/
-    $amount = $payment->getAmount();
 
     // Perform verifications related to billing address, payment currency, etc.
     // Throw exceptions as needed.
     // See \Drupal\commerce_payment\Exception for the available exceptions.
-
-    // @todo Perform the create payment request here, throw an exception if it fails.
-    // Remember to take into account $capture when performing the request.
-    //$payment_method_token = $payment_method->getRemoteId();
-    // The remote ID returned by the request.
-    $remote_id = '123456';
+    // TODO: Is this the way to generate a payment ID?
+    $turtlecoin_payment_id = bin2hex(openssl_random_pseudo_bytes(32));
+    $integrated_address = $this->turtleService->createIntegratedAddress(
+      $this->getConfiguration()['turtlecoin_address_store'],
+      $turtlecoin_payment_id
+    )->toArray();
 
     $payment->state = $received ? 'completed' : 'pending';
     $payment->save();
-    //$payment->setRemoteId($remote_id);
+    $payment->setRemoteId($turtlecoin_payment_id);
+    $payment->turtle_coin_integrated_address = $integrated_address['result']['integratedAddress'];
+    $payment->save();
+
+    ddl($payment);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function receivePayment(PaymentInterface $payment, Price $amount = NULL) {
+    $this->assertPaymentState($payment, ['pending']);
+
+    // If not specified, use the entire amount.
+    $amount = $amount ?: $payment->getAmount();
+    $payment->state = 'completed';
+    $payment->setAmount($amount);
     $payment->save();
   }
 
   /**
    * {@inheritdoc}
-   *
-   * Called during the checkout process, when the Continue to review button
-   * has been clicked on the Order information page.
-   *
-   * @see GoCardless
    */
-  /*public function createPaymentMethod(PaymentMethodInterface $payment_method, array $payment_details) {
-    // Perform the create request here, throw an exception if it fails.
-    // See \Drupal\commerce_payment\Exception for the available exceptions.
-    // You might need to do different API requests based on whether the
-    // payment method is reusable: $payment_method->isReusable().
-    // Non-reusable payment methods usually have an expiration timestamp.
-    //$payment_method->turtlecoin_integrated_address_customer = $payment_details['turtlecoin_integrated_address_customer'];
+  public function voidPayment(PaymentInterface $payment) {
+    $this->assertPaymentState($payment, ['pending']);
 
-    // Creates a reusable payment method.
-    $payment_method->setReusable(FALSE);
-    $payment_method->save();
-  }*/
+    $payment->state = 'voided';
+    $payment->save();
+  }
 
   /**
    * {@inheritdoc}
    */
-  public function voidPayment(PaymentInterface $payment) {
+  public function refundPayment(PaymentInterface $payment, Price $amount = NULL) {
+    $this->assertPaymentState($payment, ['completed', 'partially_refunded']);
+    // If not specified, refund the entire amount.
+    $amount = $amount ?: $payment->getAmount();
+    $this->assertRefundAmount($payment, $amount);
 
+    $old_refunded_amount = $payment->getRefundedAmount();
+    $new_refunded_amount = $old_refunded_amount->add($amount);
+    if ($new_refunded_amount->lessThan($payment->getAmount())) {
+      $payment->state = 'partially_refunded';
+    }
+    else {
+      $payment->state = 'refunded';
+    }
+
+    $payment->setRefundedAmount($new_refunded_amount);
+    $payment->save();
   }
 
 }
