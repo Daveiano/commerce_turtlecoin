@@ -128,12 +128,9 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
    * {@inheritdoc}
    */
   public function buildPaymentInstructions(PaymentInterface $payment) {
-    ddl($payment->turtle_coin_integrated_address);
-
-    //dsm($payment->get('turtle_coin_integrated_address'));
     $instructions = [
       '#type' => 'processed_text',
-      '#text' => 'Please transfer the amount of ' . $payment->getAmount() . ' to ' . $payment->get('turtle_coin_integrated_address'),
+      '#text' => 'Please transfer the amount of ' . $payment->getAmount() . ' to ' . $payment->get('turtle_coin_integrated_address')->value,
       '#format' => 'plain_text',
     ];
 
