@@ -1,0 +1,13 @@
+<?php
+
+/**
+ * @file
+ * Includes various helper for the TurtleCoin payment gateway.
+ */
+
+/**
+ * Implements hook_cron().
+ */
+/*function commerce_turtlecoin_cron() {
+
+}*/

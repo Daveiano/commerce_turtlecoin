@@ -34,6 +34,17 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
 
   protected $turtleService;
 
+  /**
+   * TurtleCoin constructor.
+   *
+   * @param array $configuration
+   * @param $plugin_id
+   * @param $plugin_definition
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\commerce_payment\PaymentTypeManager $payment_type_manager
+   * @param \Drupal\commerce_payment\PaymentMethodTypeManager $payment_method_type_manager
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager, $time);
 
@@ -63,6 +74,19 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
+
+    // TODO: Show a few status information.
+
+    // TODO: Remove debug output.
+    /*$response = $this->turtleService->getTransactions(
+      100,
+      1329390,
+      NULL,
+      ['TRTLv211SzUJigmnbqM5mYbv8asQvJEzBBWUdBNw2GSXMpDu3m2Csf63j2dHRSkCbDGMb24a4wTjc82JofqjgTao9zjd7ZZnhA1'],
+      '2379289011096fc112b8aaf9a94101c97cf3de375eb534aa17d9a62fa230a084'
+    )->toArray();
+
+    dsm($response['result']['items']);*/
 
     $form['turtlecoin_address_store'] = [
       '#type' => 'textfield',
@@ -128,6 +152,7 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
    * {@inheritdoc}
    */
   public function buildPaymentInstructions(PaymentInterface $payment) {
+    // TODO: Prettify.
     $instructions = [
       '#type' => 'processed_text',
       '#text' => 'Please transfer the amount of ' . $payment->getAmount() . ' to ' . $payment->get('turtle_coin_integrated_address')->value,
@@ -166,11 +191,14 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
    * final page of the checkout process: the Review page.
    */
   public function createPayment(PaymentInterface $payment, $received = FALSE) {
-    $this->assertPaymentState($payment, ['new']);
-
+    // TODO: Put in try catch?
     // Perform verifications related to billing address, payment currency, etc.
     // Throw exceptions as needed.
     // See \Drupal\commerce_payment\Exception for the available exceptions.
+    $this->assertPaymentState($payment, ['new']);
+
+    // Create an integrated address for better transaction mapping via
+    // integrated payment id.
     // TODO: Is this the way to generate a payment ID?
     $turtlecoin_payment_id = bin2hex(openssl_random_pseudo_bytes(32));
     $integrated_address = $this->turtleService->createIntegratedAddress(
@@ -178,13 +206,31 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
       $turtlecoin_payment_id
     )->toArray();
 
+    // Add the integrated address to the payment.
+    $payment->turtle_coin_integrated_address = $integrated_address['result']['integratedAddress'];
+
+    // Get the current block index and save it to the transaction.
+    $turtle_status = $this->turtleService->getStatus()->toArray();
+    $payment->turtle_coin_block_index = $turtle_status['result']['blockCount'];
+
+    $payment->setRemoteId($turtlecoin_payment_id);
     $payment->state = $received ? 'completed' : 'pending';
     $payment->save();
-    $payment->setRemoteId($turtlecoin_payment_id);
-    $payment->turtle_coin_integrated_address = $integrated_address['result']['integratedAddress'];
-    $payment->save();
 
-    ddl($payment);
+    // Add the payment to the worker queue.
+    $queue = \Drupal::queue('turtlecoin_payment_process_worker');
+
+    $item = (object) [
+      'turtlecoin_address_store' => $this->getConfiguration()['turtlecoin_address_store'],
+      'wallet_api_host' => $this->getConfiguration()['wallet_api_host'],
+      'wallet_api_port' => $this->getConfiguration()['wallet_api_port'],
+      'wallet_api_password' => $this->getConfiguration()['wallet_api_password'],
+      'firstBlockIndex' => '',
+      'blockCount' => 100,
+      'paymentId' => $turtlecoin_payment_id,
+    ];
+
+    $queue->createItem($item);
   }
 
   /**
@@ -214,6 +260,7 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
    * {@inheritdoc}
    */
   public function refundPayment(PaymentInterface $payment, Price $amount = NULL) {
+    // TODO: Display not supported.
     $this->assertPaymentState($payment, ['completed', 'partially_refunded']);
     // If not specified, refund the entire amount.
     $amount = $amount ?: $payment->getAmount();
