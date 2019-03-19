@@ -35,15 +35,7 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
   protected $turtleService;
 
   /**
-   * TurtleCoin constructor.
-   *
-   * @param array $configuration
-   * @param $plugin_id
-   * @param $plugin_definition
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   * @param \Drupal\commerce_payment\PaymentTypeManager $payment_type_manager
-   * @param \Drupal\commerce_payment\PaymentMethodTypeManager $payment_method_type_manager
-   * @param \Drupal\Component\Datetime\TimeInterface $time
+   * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager, $time);
@@ -71,22 +63,35 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * TODO: Add config for how long we should wait for a transaction - wait_for_transaction_time.
+   * TODO: Add config to activate and deactivate logging - Test & Live Modes?
+   * TODO: Show a few status information.
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
-    // TODO: Show a few status information.
-
     // TODO: Remove debug output.
     /*$response = $this->turtleService->getTransactions(
-      100,
+      100000,
       1329390,
       NULL,
       ['TRTLv211SzUJigmnbqM5mYbv8asQvJEzBBWUdBNw2GSXMpDu3m2Csf63j2dHRSkCbDGMb24a4wTjc82JofqjgTao9zjd7ZZnhA1'],
-      '2379289011096fc112b8aaf9a94101c97cf3de375eb534aa17d9a62fa230a084'
+      '6719fd91470edb709acb4a4d9a3109c2719ab82a70939ccfe18f9731c7f498ae'
     )->toArray();
 
-    dsm($response['result']['items']);*/
+    dsm($response);
+
+    foreach ($response['result']['items'] as $transactions) {
+      if (count($transactions['transactions']) > 0) {
+        foreach ($transactions['transactions'] as $transaction) {
+          dsm($transaction);
+          if ($transaction['paymentId'] === '' && $transaction['amount'] === '') {
+            $tx_hash = $transaction['transactionHash'];
+          }
+        }
+      }
+    }*/
 
     $form['turtlecoin_address_store'] = [
       '#type' => 'textfield',
@@ -155,7 +160,7 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
     // TODO: Prettify.
     $instructions = [
       '#type' => 'processed_text',
-      '#text' => 'Please transfer the amount of ' . $payment->getAmount() . ' to ' . $payment->get('turtle_coin_integrated_address')->value,
+      '#text' => 'Please transfer the amount of ' . $payment->getAmount() . ' to ' . $payment->get('turtle_coin_integrated_address')->value . ' Your Payment ID is ' . $payment->getRemoteId(),
       '#format' => 'plain_text',
     ];
 
@@ -225,7 +230,7 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
       'wallet_api_host' => $this->getConfiguration()['wallet_api_host'],
       'wallet_api_port' => $this->getConfiguration()['wallet_api_port'],
       'wallet_api_password' => $this->getConfiguration()['wallet_api_password'],
-      'firstBlockIndex' => '',
+      'firstBlockIndex' => $turtle_status['result']['blockCount'],
       'blockCount' => 100,
       'paymentId' => $turtlecoin_payment_id,
     ];
