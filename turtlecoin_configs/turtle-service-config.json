@@ -1,8 +1,8 @@
 {
   "bind-address": "127.0.0.1",
   "bind-port": 8070,
-  "container-file": "zedwallet.wallet.wallet",
-  "container-password": "!3756861dBa",
+  "container-file": "zedwallet.wallet",
+  "container-password": "wallet-password",
   "daemon-address": "127.0.0.1",
   "daemon-port": 11898,
   "enable-cors": "",

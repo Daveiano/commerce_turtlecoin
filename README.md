@@ -2,20 +2,41 @@
 
 Payment Gateway for Drupal Commerce to allow payments with [TurtleCoin](https://turtlecoin.lol).
 
-Work in progress. Under active development.
+**Work in progress. Under active development.**
 
-Code visible on [GitHub](https://github.com/Daveiano/commerce_turtlecoin) and as [Drupal sandbox module](https://www.drupal.org/sandbox/daveiano/3029539).
+Issue Handling is done on Drupal.org: [Drupal Project Page](https://www.drupal.org/sandbox/daveiano/3029539)
+
+## What this Modules does
+
+Commerce TurtleCoin is providing two (currently one, second is in development) 
+Payment Gateways for paying with [TurtleCoin](https://turtlecoin.lol) in 
+[Drupal Commerce](https://www.drupal.org/project/commerce). 
+
+The first is an 
+implementation with the [Wallet RPC API](https://api-docs.turtlecoin.lol/?php#wallet-rpc-api)
+to generate an integrated address on checkout and track the transaction to void it after 
+a given time or complete it if the payment arrives.
+
+The second payment gateway, which is in development will be implemented with 
+[TurtlePay™](https://turtlepay.io/).
+
 
 ## Installation
 
-### Drupal
+The gateway implemented with Wallet RPC API needs a running and connected
+TurtleCoind and turtle-service service.
 
-* Enable the module as usual
-* Create a new payment gateway with `TurtleCoin`
-* Enter your api port, host and password
+See here:  [https://github.com/turtlecoin/turtlecoin](https://github.com/turtlecoin/turtlecoin)
 
-### TurtleCoin
+For installation and setting up a wallet see here: [https://github.com/turtlecoin/turtlecoin/wiki/Using-zedwallet](https://github.com/turtlecoin/turtlecoin/wiki/Using-zedwallet)
 
-#### Creating a wallet
+This module includes two very basic config files you could use for the two services
+as a basis. You can use them via 
 
-## What this Modules does
+`./TurtleCoind -c path/to/config/TurtleCoind-config.json`
+
+and 
+
+`./turtle-service -c path/to/config/turtle-service-config.json`. 
+
+**Warning:** Change the passwords for production.

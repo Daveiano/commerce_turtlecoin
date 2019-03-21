@@ -3,7 +3,7 @@
   "add-peer": [],
   "add-priority-node": [],
   "allow-local-ip": false,
-  "data-dir": "/home/dba/.TurtleCoin",
+  "data-dir": "/home/username/.TurtleCoin",
   "db-max-open-files": 100,
   "db-read-buffer-size": 10,
   "db-threads": 2,
