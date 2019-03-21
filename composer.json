@@ -1,0 +1,12 @@
+{
+  "name": "drupal/commerce_turtlecoin",
+  "type": "drupal-module",
+  "description": "Provides Commerce integration for TurtleCoin.",
+  "homepage": "https://www.drupal.org/sandbox/daveiano/3029539",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "require": {
+    "drupal/commerce": "~2.0",
+    "turtlecoin/turtlecoin-rpc-php": "^2.1"
+  }
+}

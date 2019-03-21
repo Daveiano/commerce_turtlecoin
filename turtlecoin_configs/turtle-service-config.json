@@ -1,0 +1,14 @@
+{
+  "bind-address": "127.0.0.1",
+  "bind-port": 8070,
+  "container-file": "zedwallet.wallet",
+  "container-password": "wallet-password",
+  "daemon-address": "127.0.0.1",
+  "daemon-port": 11898,
+  "enable-cors": "",
+  "init-timeout": 10,
+  "log-file": "service.log",
+  "log-level": 3,
+  "rpc-legacy-security": false,
+  "rpc-password": "password"
+}

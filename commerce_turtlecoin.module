@@ -1,0 +1,78 @@
+<?php
+
+use Drupal\Core\Queue\SuspendQueueException;
+
+/**
+ * @file
+ * Includes various helper for the TurtleCoin payment gateway.
+ */
+
+/**
+ * Implements hook_cron().
+ *
+ * @see https://drupal.stackexchange.com/questions/206838/documentation-or-tutorial-on-using-batch-or-queue-services-api-programmatically
+ */
+function commerce_turtlecoin_cron() {
+  $queue_factory = \Drupal::service('queue');
+  $queue_manager = \Drupal::service('plugin.manager.queue_worker');
+
+  // Get the queue implementation for import_content_from_xml queue
+  $queue = $queue_factory->get('turtlecoin_payment_process_worker');
+  // Get the queue worker
+  $queue_worker = $queue_manager->createInstance('turtlecoin_payment_process_worker');
+
+  // Get the number of items
+  // TODO: Test with huge number of transactions - process time?
+  $number_of_queue = $queue->numberOfItems();
+
+  \Drupal::logger('commerce_turtlecoin')->notice('Transactions in queue to process: @number.',
+    array(
+      '@number' => $number_of_queue,
+    ));
+
+  $items_to_release = [];
+
+  // Repeat $number_of_queue times
+  for ($i = 0; $i < $number_of_queue; $i++) {
+    // Get a queued item, $lease_time is set to 60 seconds.
+    if ($item = $queue->claimItem(60)) {
+      try {
+        // Process it.
+        $transaction_result = $queue_worker->processItem($item->data);
+
+        // If everything was correct, delete the processed item from the queue.
+        if ($transaction_result === 'completed' || $transaction_result === 'voided') {
+          \Drupal::logger('commerce_turtlecoin')->notice('Transaction @payment_id is @state.',
+            array(
+              '@payment_id' => $item->data->paymentId,
+              '@state' => $transaction_result,
+            ));
+
+          $queue->deleteItem($item);
+        }
+        else {
+          \Drupal::logger('commerce_turtlecoin')->notice('Transaction @payment_id not yet payed.',
+            array(
+              '@payment_id' => $item->data->paymentId,
+            ));
+
+          // Add items for releasing later.
+          $items_to_release[] = $item;
+        }
+      }
+      catch (SuspendQueueException $e) {
+        // If there was an Exception trown because of an error
+        // Releases the item that the worker could not process.
+        // Another worker can come and process it
+        $queue->releaseItem($item);
+        break;
+      }
+    }
+  }
+
+  // Finally release the not yet finished transactions.
+  foreach($items_to_release as $item) {
+    $queue->releaseItem($item);
+  }
+
+}
