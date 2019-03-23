@@ -40,3 +40,6 @@ and
 `./turtle-service -c path/to/config/turtle-service-config.json`. 
 
 **Warning:** Change the passwords for production.
+
+Donate to support my work: 
+`TRTLv211SzUJigmnbqM5mYbv8asQvJEzBBWUdBNw2GSXMpDu3m2Csf63j2dHRSkCbDGMb24a4wTjc82JofqjgTao9zjd7ZZnhA1`
