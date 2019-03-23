@@ -30,7 +30,7 @@ commerce_payment.commerce_payment_type.plugin.payment_turtle_coin:
     turtle_coin_block_index:
       type: integer
       label: 'Block Index'
-# TODO: How to save the whole response?
+
 commerce_payment.commerce_payment_type.plugin.payment_turtle_pay:
   type: commerce_payment_type_configuration
   mapping:

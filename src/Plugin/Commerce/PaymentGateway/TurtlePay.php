@@ -124,13 +124,15 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
    * {@inheritdoc}
    */
   public function buildPaymentInstructions(PaymentInterface $payment) {
-    // TODO: Prettify.
+    // TODO: Prettify with #theme key.
+    // @see https://www.drupal.org/docs/8/api/render-api/render-arrays.
     $response = $payment->get('turtlepay_checkout_response')->value;
-    dsm($response);
+    $response = json_decode($response, TRUE);
+    $validity_time = $response['endHeight'] - $response['startHeight'];
 
     $instructions = [
       '#type' => 'processed_text',
-      '#text' => 'Please transfer the amount of ' . $payment->getAmount() . ' to ',
+      '#text' => 'Please transfer the amount of ' . $payment->getAmount() . ' to ' . $payment->getRemoteId() . ' Warning: This address will only be active for about ' . $validity_time . ' Blocks (' . $validity_time / 60 . 'h)',
       '#format' => 'plain_text',
     ];
 
@@ -191,9 +193,16 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
       $response_body = json_decode($response->getBody()->getContents(), TRUE);
 
       // Save the response to the payment and the sendToAddress as remote_id.
-      // TODO: Data too long. How to save this?
-      $payment->turtlepay_checkout_response = json_encode($response_body);
       $payment->setRemoteId($response_body['sendToAddress']);
+
+      $turtlepay_checkout_response = $response_body;
+
+      // Unset qrCode and sendToAddress, we save it separately.
+      unset($turtlepay_checkout_response['sendToAddress']);
+      unset($turtlepay_checkout_response['qrCode']);
+      // TODO: What is this?
+      unset($turtlepay_checkout_response['callbackPublicKey']);
+      $payment->turtlepay_checkout_response = json_encode($turtlepay_checkout_response);
 
       $payment->state = $received ? 'completed' : 'pending';
       $payment->save();
