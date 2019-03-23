@@ -26,7 +26,7 @@ class PaymentTurtleCoin extends PaymentTypeBase {
       ->setRequired(TRUE);
 
     $fields['turtle_coin_block_index'] = BundleFieldDefinition::create('integer')
-      ->setLabel(t('Block Index'))
+      ->setLabel(t('TurtleCoin Block Index'))
       ->setDescription(t('Turtle Chain Block index at the time of purchase.'))
       ->setRequired(TRUE);
 

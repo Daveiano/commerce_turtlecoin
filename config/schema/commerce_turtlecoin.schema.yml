@@ -3,16 +3,23 @@ commerce_payment.commerce_payment_gateway.plugin.turtlecoin_payment_gateway:
   mapping:
     turtlecoin_address_store:
       type: string
-      label: 'TurtleCoin address'
+      label: 'TurtleCoin address which will receive the payments.'
     wallet_api_host:
       type: string
-      label: 'The host where your wallet-api is available.'
+      label: 'The host where your turtle-service is available.'
     wallet_api_port:
       type: string
-      label: 'The port where your wallet-api is available.'
+      label: 'The port where your turtle-service is available.'
     wallet_api_password:
       type: string
-      label: 'The password the wallet-api uses to authorize.'
+      label: 'The password the turtle-service uses to authorize.'
+
+commerce_payment.commerce_payment_gateway.plugin.turtlepay_payment_gateway:
+  type: commerce_payment_gateway_configuration
+  mapping:
+    turtlecoin_address_store:
+      type: string
+      label: 'TurtleCoin address which will receive the payments.'
 
 commerce_payment.commerce_payment_type.plugin.payment_turtle_coin:
   type: commerce_payment_type_configuration
@@ -23,3 +30,10 @@ commerce_payment.commerce_payment_type.plugin.payment_turtle_coin:
     turtle_coin_block_index:
       type: integer
       label: 'Block Index'
+# TODO: How to save the whole response?
+commerce_payment.commerce_payment_type.plugin.payment_turtle_pay:
+  type: commerce_payment_type_configuration
+  mapping:
+    turtlepay_checkout_response:
+      type: string
+      label: 'Response from TurtlePay while checkout.'
