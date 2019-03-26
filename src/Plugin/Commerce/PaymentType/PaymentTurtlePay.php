@@ -20,10 +20,14 @@ class PaymentTurtlePay extends PaymentTypeBase {
    * {@inheritdoc}
    */
   public function buildFieldDefinitions() {
-    // TODO: How to save the whole response?
     $fields['turtlepay_checkout_response'] = BundleFieldDefinition::create('string')
       ->setLabel(t('TurtlePay Checkout Response'))
       ->setDescription(t('Response from TurtlePay while checkout.'))
+      ->setRequired(TRUE);
+
+    $fields['turtlepay_callback_secret'] = BundleFieldDefinition::create('string')
+      ->setLabel(t('TurtlePay Callback Secret'))
+      ->setDescription(t('A secret string to validate the callback response.'))
       ->setRequired(TRUE);
 
     return $fields;

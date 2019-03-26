@@ -15,6 +15,9 @@ use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\commerce_payment\Exception\PaymentGatewayException;
 use GuzzleHttp\Exception\RequestException;
+use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\UrlHelper;
+use Drupal\Component\Utility\Crypt;
 
 /**
  * Provides the TurtleCoin Checkout payment gateway.
@@ -73,6 +76,7 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
   public function defaultConfiguration() {
     return [
       'turtlecoin_address_store' => '',
+      'turtlepay_callback_host' => 'https://yourdomain.com',
     ] + parent::defaultConfiguration();
   }
 
@@ -92,6 +96,14 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
       '#required' => TRUE,
     ];
 
+    $form['turtlepay_callback_host'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('TurtlePay Callback Host'),
+      '#description' => $this->t('TurtlePay will send status updates to this host.'),
+      '#default_value' => $this->configuration['turtlepay_callback_host'],
+      '#required' => TRUE,
+    ];
+
     return $form;
   }
 
@@ -107,6 +119,10 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
       if (!TurtleCoinBaseController::validate($values['turtlecoin_address_store'])) {
         $form_state->setError($form['turtlecoin_address_store'], t('You have entered an invalid TurtleCoin Address.'));
       }
+
+      if (!UrlHelper::isValid($values['turtlepay_callback_host'], TRUE)) {
+        $form_state->setError($form['turtlepay_callback_host'], t('You have entered an invalid Host.'));
+      }
     }
   }
 
@@ -118,6 +134,8 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
 
     $values = $form_state->getValue($form['#parents']);
     $this->configuration['turtlecoin_address_store'] = $values['turtlecoin_address_store'];
+    // Remove ending slash from host input.
+    $this->configuration['turtlepay_callback_host'] = rtrim($values['turtlepay_callback_host'], '/');
   }
 
   /**
@@ -127,7 +145,7 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
     // TODO: Prettify with #theme key.
     // @see https://www.drupal.org/docs/8/api/render-api/render-arrays.
     $response = $payment->get('turtlepay_checkout_response')->value;
-    $response = json_decode($response, TRUE);
+    $response = Json::decode($response);
     $validity_time = $response['endHeight'] - $response['startHeight'];
 
     $instructions = [
@@ -172,12 +190,16 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
     // Throw exceptions as needed.
     // See \Drupal\commerce_payment\Exception for the available exceptions.
     $this->assertPaymentState($payment, ['new']);
+    // Save the payment to get it's ID for the callback.
+    $payment->save();
 
-    // TODO: Work in callback.
-    $data = json_encode([
+    // Generate a secret and unique string for the callback url.
+    $secret = Crypt::randomBytesBase64(96);
+
+    $data = Json::encode([
       'amount' => $payment->getAmount()->getNumber() * 100,
       'address' => $this->getConfiguration()['turtlecoin_address_store'],
-      'callback' => 'http://drupal8.localhost/callback',
+      'callback' => $this->getConfiguration()['turtlepay_callback_host'] . '/commerce_turtlecoin/api/v1/turtlepay/' . $secret . '/' . $payment->id(),
     ]);
 
     // Perform a request to TurtlePay API.
@@ -190,19 +212,23 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
         'body' => $data,
       ]);
 
-      $response_body = json_decode($response->getBody()->getContents(), TRUE);
+      $response_body = Json::decode($response->getBody()->getContents());
 
       // Save the response to the payment and the sendToAddress as remote_id.
       $payment->setRemoteId($response_body['sendToAddress']);
 
       $turtlepay_checkout_response = $response_body;
 
-      // Unset qrCode and sendToAddress, we save it separately.
+      // Unset qrCode and sendToAddress, we save it separately -
+      // could generate it by ourselves.
       unset($turtlepay_checkout_response['sendToAddress']);
       unset($turtlepay_checkout_response['qrCode']);
-      // TODO: What is this?
+      // TODO: What is callbackPublicKey?
       unset($turtlepay_checkout_response['callbackPublicKey']);
-      $payment->turtlepay_checkout_response = json_encode($turtlepay_checkout_response);
+      $payment->turtlepay_checkout_response = Json::encode($turtlepay_checkout_response);
+
+      // Save secret to payment.
+      $payment->turtlepay_callback_secret = $secret;
 
       $payment->state = $received ? 'completed' : 'pending';
       $payment->save();
