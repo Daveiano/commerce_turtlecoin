@@ -11,7 +11,7 @@ use Drupal\entity\BundleFieldDefinition;
  * @CommercePaymentType(
  *   id = "payment_turtle_pay",
  *   label = @Translation("TurtlePay"),
- *   workflow = "payment_manual",
+ *   workflow = "payment_turtlepay",
  * )
  */
 class PaymentTurtlePay extends PaymentTypeBase {

@@ -80,13 +80,15 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
           // are not enough funds available to forward the funds (due to the
           // network transaction fee) to forward the funds to the requested
           // wallet.
-          $payment->setState('voided');
+          $payment->setState('partially_payed');
           $payment->save();
           break;
 
         case 200:
           // sentFunds.
           // Called when we relay funds to the specified wallet.
+          $payment->setState('sent');
+          $payment->save();
           break;
 
         case 102:
@@ -94,6 +96,8 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
           // Called when we have received funds for the request; however, we
           // have not received all the funds requested or the funds have not
           // reached the required confirmation depth.
+          $payment->setState('in_progress');
+          $payment->save();
           break;
 
         case 100:
