@@ -30,6 +30,11 @@ class PaymentTurtlePay extends PaymentTypeBase {
       ->setDescription(t('A secret string to validate the callback response.'))
       ->setRequired(TRUE);
 
+    $fields['turtlepay_callback_response'] = BundleFieldDefinition::create('string_long')
+      ->setLabel(t('TurtlePay Callback Response'))
+      ->setDescription(t('The Json response from TurtlePay.'))
+      ->setRequired(TRUE);
+
     return $fields;
   }
 
