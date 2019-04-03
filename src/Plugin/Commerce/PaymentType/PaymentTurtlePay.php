@@ -35,6 +35,11 @@ class PaymentTurtlePay extends PaymentTypeBase {
       ->setDescription(t('The Json response from TurtlePay.'))
       ->setRequired(TRUE);
 
+    $fields['turtlepay_tx_hash'] = BundleFieldDefinition::create('string')
+      ->setLabel(t('TurtlePay Transaction Hash'))
+      ->setDescription(t('Transaction Hash for the transaction from TurtlePay to your wallet.'))
+      ->setRequired(TRUE);
+
     return $fields;
   }
 

@@ -55,7 +55,6 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
     // First check if there is a payment with the specified id and secret.
     $payment = $this->paymentStorage->load($payment_id);
 
-    ddl($_SERVER);
     ddl(Json::decode($request->getContent(), TRUE));
 
     if ($payment && $payment->get('turtlepay_callback_secret')->value === $secret) {
@@ -84,26 +83,30 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
           $payment->save();
           break;
 
-        case 200:
-          // sentFunds.
-          // Called when we relay funds to the specified wallet.
-          $payment->setState('sent');
-          $payment->save();
-          break;
-
         case 102:
           // inProgress.
           // Called when we have received funds for the request; however, we
           // have not received all the funds requested or the funds have not
           // reached the required confirmation depth.
-          $payment->setState('in_progress');
-          $payment->save();
+          // Dont re-set the state every time.
+          if ($payment->getState() !== 'in_progress') {
+            $payment->setState('in_progress');
+            $payment->save();
+          }
           break;
 
         case 100:
           // receivedFunds.
           // Called when at least the requested funds have been sent to
           // the specified wallet and enough confirmations have completed.
+          $payment->setState('sent');
+          $payment->save();
+          break;
+
+        case 200:
+          // sentFunds.
+          // Called when we relay funds to the specified wallet.
+          // TODO: Save TX Hash to the payment.
           $payment->setState('completed');
           $payment->save();
           break;

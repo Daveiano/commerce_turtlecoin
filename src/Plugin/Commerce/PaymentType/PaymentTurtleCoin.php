@@ -30,6 +30,11 @@ class PaymentTurtleCoin extends PaymentTypeBase {
       ->setDescription(t('Turtle Chain Block index at the time of purchase.'))
       ->setRequired(TRUE);
 
+    $fields['turtle_coin_tx_hash'] = BundleFieldDefinition::create('string')
+      ->setLabel(t('TurtleCoin Transaction Hash'))
+      ->setDescription(t('Transaction Hash for the transaction from the customer to your wallet.'))
+      ->setRequired(TRUE);
+
     return $fields;
   }
 

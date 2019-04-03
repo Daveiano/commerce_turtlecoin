@@ -1,4 +1,3 @@
-# TODO: Add a hidden secret string to the callback url to validate that it comes from turtle_pay.
 commerce_turtlecoin.turtle_pay_callback:
   path: '/commerce_turtlecoin/api/v1/turtlepay/{secret}/{payment_id}'
   defaults:

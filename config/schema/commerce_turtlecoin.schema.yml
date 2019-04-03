@@ -33,6 +33,9 @@ commerce_payment.commerce_payment_type.plugin.payment_turtle_coin:
     turtle_coin_block_index:
       type: integer
       label: 'Block Index'
+    turtle_coin_tx_hash:
+      type: string
+      label: 'Transaction Hash'
 
 commerce_payment.commerce_payment_type.plugin.payment_turtle_pay:
   type: commerce_payment_type_configuration
@@ -46,3 +49,6 @@ commerce_payment.commerce_payment_type.plugin.payment_turtle_pay:
     turtlepay_callback_response:
       type: string_long
       label: 'TurtlePay Callback Response'
+    turtlepay_tx_hash:
+      type: string
+      label: 'Transaction Hash'
