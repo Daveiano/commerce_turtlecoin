@@ -26,4 +26,14 @@ class TurtleCoinBaseController extends ControllerBase {
     return FALSE;
   }
 
+  /**
+   * Creates a turtle payment ID.
+   *
+   * @return string
+   *   A valid paymentId (64char hex string).
+   */
+  public static function createPaymentId() {
+    return bin2hex(openssl_random_pseudo_bytes(32));
+  }
+
 }

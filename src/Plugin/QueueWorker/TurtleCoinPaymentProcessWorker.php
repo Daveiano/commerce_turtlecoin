@@ -50,13 +50,14 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
    * {@inheritdoc}
    */
   public function processItem($item) {
-    \Drupal::logger('commerce_turtlecoin')->notice('Processing transaction with Payment ID: @payment_id.',
-      array(
-        '@payment_id' => $item->paymentId,
-      ));
+    if ($item->mode === 'debug') {
+      \Drupal::logger('commerce_turtlecoin')->notice('Processing transaction with Payment ID: @payment_id.',
+        array(
+          '@payment_id' => $item->paymentId,
+        ));
+    }
 
     // Create a new turtle-service instance.
-    // TODO: Define as class property.
     $config = [
       'rpcHost' => $item->wallet_api_host,
       'rpcPort' => $item->wallet_api_port,
@@ -79,7 +80,6 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
     // Load the commerce_payment for amount comparing.
     $payment = $this->paymentStorage->loadByRemoteId($item->paymentId);
 
-    // TODO: Validate response correctly!
     if (count($transactions_response['result']['items']) > 0) {
       foreach ($transactions_response['result']['items'] as $transactions) {
         if (count($transactions['transactions']) > 0) {
@@ -117,7 +117,7 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function checkIfTransactionOutdated($item, array $turtle_status) {
-    $transaction_wait_time = 3600;
+    $transaction_wait_time = $item->wait_for_transactions_time;
     $transaction_wait_block_time = $transaction_wait_time / 30;
 
     if ($turtle_status['result']['blockCount'] > (intval($item->firstBlockIndex) + intval($transaction_wait_block_time))) {
@@ -131,8 +131,6 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
   /**
    * Set a given payment to state 'complete'.
    *
-   * TODO: Save the tx_hash to the payment.
-   *
    * @param string $payment_id
    *   PaymentId of transaction to process.
    * @param string $tx_hash
@@ -145,9 +143,9 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
    *   In case of failures an exception is thrown.
    */
   public function completeTransaction($payment_id, $tx_hash) {
-    // TODO: Save TX Hash to the payment.
     $payment = $this->paymentStorage->loadByRemoteId($payment_id);
     $payment->setState('completed');
+    $payment->turtle_coin_tx_hash = $tx_hash;
     $payment->save();
 
     return 'completed';

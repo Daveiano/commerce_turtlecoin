@@ -33,6 +33,10 @@ use Drupal\Component\Utility\Crypt;
  *     "add-payment" = "Drupal\commerce_turtlecoin\PluginForm\TurtlePayPaymentAddForm",
  *     "receive-payment" = "Drupal\commerce_turtlecoin\PluginForm\TurtlePayPaymentReceiveForm",
  *   },
+ *   modes = {
+ *     "debug" = "Debug",
+ *     "live" = "Live",
+ *   },
  *   payment_type = "payment_turtle_pay",
  * )
  */
@@ -82,8 +86,6 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
 
   /**
    * {@inheritdoc}
-   *
-   * TODO: Add config to activate and deactivate logging - Test & Live Modes?
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
@@ -265,7 +267,7 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
    * {@inheritdoc}
    */
   public function refundPayment(PaymentInterface $payment, Price $amount = NULL) {
-    // TODO: Display not supported.
+    // TODO: Does this make sense?
     $this->assertPaymentState($payment, ['completed', 'partially_refunded']);
     // If not specified, refund the entire amount.
     $amount = $amount ?: $payment->getAmount();

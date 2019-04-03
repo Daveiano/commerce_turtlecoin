@@ -22,10 +22,9 @@ function commerce_turtlecoin_cron() {
   $queue_worker = $queue_manager->createInstance('turtlecoin_payment_process_worker');
 
   // Get the number of items
-  // TODO: Test with huge number of transactions - process time?
   $number_of_queue = $queue->numberOfItems();
 
-  \Drupal::logger('commerce_turtlecoin')->notice('Transactions in queue to process: @number.',
+  \Drupal::logger('commerce_turtlecoin')->notice('Transactions in queue to process: @number',
     array(
       '@number' => $number_of_queue,
     ));
@@ -42,19 +41,21 @@ function commerce_turtlecoin_cron() {
 
         // If everything was correct, delete the processed item from the queue.
         if ($transaction_result === 'completed' || $transaction_result === 'voided') {
-          \Drupal::logger('commerce_turtlecoin')->notice('Transaction @payment_id is @state.',
-            array(
+          if ($item->data->mode === 'debug') {
+            \Drupal::logger('commerce_turtlecoin')->notice('Transaction @payment_id is @state.', [
               '@payment_id' => $item->data->paymentId,
               '@state' => $transaction_result,
-            ));
+            ]);
+          }
 
           $queue->deleteItem($item);
         }
         else {
-          \Drupal::logger('commerce_turtlecoin')->notice('Transaction @payment_id not yet payed.',
-            array(
+          if ($item->data->mode === 'debug') {
+            \Drupal::logger('commerce_turtlecoin')->notice('Transaction @payment_id not yet payed.', [
               '@payment_id' => $item->data->paymentId,
-            ));
+            ]);
+          }
 
           // Add items for releasing later.
           $items_to_release[] = $item;

@@ -41,6 +41,8 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
   /**
    * Callback for TurtlePay.
    *
+   * TODO: Find a way to access the gateway configuration for debug/live mode.
+   *
    * @param string $secret
    *   A secret and unique string to validate the response.
    * @param int $payment_id
@@ -54,8 +56,6 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
   public function postProcess($secret, $payment_id, Request $request) {
     // First check if there is a payment with the specified id and secret.
     $payment = $this->paymentStorage->load($payment_id);
-
-    ddl(Json::decode($request->getContent(), TRUE));
 
     if ($payment && $payment->get('turtlepay_callback_secret')->value === $secret) {
       $data = Json::decode($request->getContent(), TRUE);
@@ -106,8 +106,8 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
         case 200:
           // sentFunds.
           // Called when we relay funds to the specified wallet.
-          // TODO: Save TX Hash to the payment.
           $payment->setState('completed');
+          $payment->turtlepay_tx_hash = $data['txnHash'];
           $payment->save();
           break;
       }
