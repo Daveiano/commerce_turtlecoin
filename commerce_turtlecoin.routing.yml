@@ -1,0 +1,8 @@
+commerce_turtlecoin.turtle_pay_callback:
+  path: '/commerce_turtlecoin/api/v1/turtlepay/{secret}/{payment_id}'
+  defaults:
+    _controller: '\Drupal\commerce_turtlecoin\Controller\TurtlePayCallbackController::postProcess'
+  methods: [POST]
+  requirements:
+    _permission: 'access content'
+    _content_type_format: json

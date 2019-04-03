@@ -131,6 +131,8 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
   /**
    * Set a given payment to state 'complete'.
    *
+   * TODO: Save the tx_hash to the payment.
+   *
    * @param string $payment_id
    *   PaymentId of transaction to process.
    * @param string $tx_hash

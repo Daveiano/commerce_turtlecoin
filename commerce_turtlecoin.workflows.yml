@@ -1,0 +1,50 @@
+payment_turtlepay:
+  id: payment_turtlepay
+  group: commerce_payment
+  label: 'TurtlePay'
+  states:
+    new:
+      label: 'New'
+    pending:
+      label: 'Pending'
+    in_progress:
+      label: 'In progress'
+    sent:
+      label: 'Sent'
+    completed:
+      label: 'Completed'
+    refunded:
+      label: 'Refunded'
+    partially_payed:
+      label: 'Partially payed'
+    voided:
+      label: 'Voided'
+  transitions:
+    create:
+      label: 'Create payment'
+      from: [new]
+      to: pending
+    in_progress:
+      label: 'In progress'
+      from: [pending]
+      to: in_progress
+    sent:
+      label: 'Sent'
+      from: [in_progress]
+      to: sent
+    partially_payed:
+      label: 'Partially payed'
+      from: [in_progress]
+      to: partially_payed
+    receive:
+      label: 'Receive payment'
+      from: [pending]
+      to: completed
+    refund:
+      label: 'Refund payment'
+      from: [completed]
+      to: refunded
+    void:
+      label: 'Void payment'
+      from: [pending]
+      to: voided
