@@ -1,3 +1,15 @@
+.payment-instructions-turtlecoin .payment-logo-qr {
+  display: flex;
+  flex-flow: row;
+  flex-wrap: wrap;
+}
+
+.payment-instructions-turtlecoin .payment-logo-qr img {
+  align-self: center;
+  flex-basis: 50%;
+  width: 50%;
+}
+
 .payment-instructions-turtlecoin.turtlepay {
   background: rgb(230, 230, 230);
   padding: 15px;
@@ -42,9 +54,4 @@
 
 .payment-instructions-turtlecoin.turtlecoin .payment-address {
   font-size: 1.25em;
-}
-
-.payment-instructions-turtlecoin.turtlecoin .payment-qr-code {
-  display: block;
-  margin: 15px 0;
 }

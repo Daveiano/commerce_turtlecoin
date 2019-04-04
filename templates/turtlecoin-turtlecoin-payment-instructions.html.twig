@@ -17,5 +17,8 @@
   <p>Please transfer the amount of <span class="payment-amount">{{ payment_amount }}</span> to <span class="payment-address">{{ turtle_address }}</span></p>
   <p class="payment-warning">Warning: This address will only be active for about {{ validity_time_blocks }} Blocks ({{ validity_time }}h)</p>
 
-  <img class="payment-qr-code" src="https://chart.googleapis.com/chart?cht=qr&chs=256x256&chl=turtlecoin://{{ turtle_address }}?amount={{ payment_amount|replace({'XTR': ''}) * 100 }}" />
+  <div class="payment-logo-qr">
+    <img alt="TurtleCoin Logo" title="TurtleCoin" src="https://raw.githubusercontent.com/turtlecoin/brand/master/logo/web/stacked/turtlecoin_stacked_color%402x.png" />
+    <img class="payment-qr-code" src="https://chart.googleapis.com/chart?cht=qr&chs=512x512&chl=turtlecoin://{{ turtle_address }}?amount={{ payment_amount|replace({'XTR': ''}) * 100 }}" />
+  </div>
 </div>
