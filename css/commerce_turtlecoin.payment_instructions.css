@@ -12,7 +12,39 @@
   color: rgb(250, 100, 100);
 }
 
+.payment-instructions-turtlecoin.turtlepay .payment-address {
+  font-size: 1.25em;
+}
+
 .payment-instructions-turtlecoin.turtlepay .payment-qr-code {
+  display: block;
+  margin: 15px 0;
+}
+
+.payment-instructions-turtlecoin.turtlepay a {
+  text-decoration: none;
+  border-bottom: none;
+}
+
+.payment-instructions-turtlecoin.turtlecoin {
+  background: rgb(230, 230, 230);
+  padding: 15px;
+}
+
+.payment-instructions-turtlecoin.turtlecoin .payment-address,
+.payment-instructions-turtlecoin.turtlecoin .payment-amount {
+  font-weight: bold;
+}
+
+.payment-instructions-turtlecoin.turtlecoin .payment-warning {
+  color: rgb(250, 100, 100);
+}
+
+.payment-instructions-turtlecoin.turtlecoin .payment-address {
+  font-size: 1.25em;
+}
+
+.payment-instructions-turtlecoin.turtlecoin .payment-qr-code {
   display: block;
   margin: 15px 0;
 }

@@ -144,8 +144,6 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
    * {@inheritdoc}
    */
   public function buildPaymentInstructions(PaymentInterface $payment) {
-    // TODO: Prettify with #theme key.
-    // @see https://www.drupal.org/docs/8/api/render-api/render-arrays.
     $response = $payment->get('turtlepay_checkout_response')->value;
     $response = Json::decode($response);
     $validity_time = $response['endHeight'] - $response['startHeight'];
