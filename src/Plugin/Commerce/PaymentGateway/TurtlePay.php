@@ -151,9 +151,14 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
     $validity_time = $response['endHeight'] - $response['startHeight'];
 
     $instructions = [
-      '#type' => 'processed_text',
-      '#text' => 'Please transfer the amount of ' . $payment->getAmount() . ' to ' . $payment->getRemoteId() . ' Warning: This address will only be active for about ' . $validity_time . ' Blocks (' . $validity_time / 60 . 'h)',
-      '#format' => 'plain_text',
+      '#theme' => 'turtlecoin_turtle_pay_payment_instructions',
+      '#payment_amount' => $payment->getAmount(),
+      '#turtle_address' => $payment->getRemoteId(),
+      '#validity_time' => $validity_time / 60,
+      '#validity_time_blocks' => $validity_time,
+      '#attached' => [
+        'library' => ['commerce_turtlecoin/payment_instructions'],
+      ],
     ];
 
     return $instructions;

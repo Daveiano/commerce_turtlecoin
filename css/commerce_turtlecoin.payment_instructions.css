@@ -1,0 +1,18 @@
+.payment-instructions-turtlecoin.turtlepay {
+  background: rgb(230, 230, 230);
+  padding: 15px;
+}
+
+.payment-instructions-turtlecoin.turtlepay .payment-address,
+.payment-instructions-turtlecoin.turtlepay .payment-amount {
+  font-weight: bold;
+}
+
+.payment-instructions-turtlecoin.turtlepay .payment-warning {
+  color: rgb(250, 100, 100);
+}
+
+.payment-instructions-turtlecoin.turtlepay .payment-qr-code {
+  display: block;
+  margin: 15px 0;
+}

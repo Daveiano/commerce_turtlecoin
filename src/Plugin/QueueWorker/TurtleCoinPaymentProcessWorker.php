@@ -67,6 +67,7 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
     $turtleService = new TurtleService($config);
 
     // Search for the given transaction.
+    // TODO: Try Catch.
     $transactions_response = $turtleService->getTransactions(
       $item->blockCount,
       $item->firstBlockIndex,

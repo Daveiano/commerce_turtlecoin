@@ -1,0 +1,25 @@
+{#
+/**
+ * @file
+ * Default theme implementation for the commerce_turtlecoin TurtlePay payment instructions.
+ *
+ * Available variables:
+ * - payment_amount: Amount of the payment.
+ * - turtle_address: Send To Turtle address from TurtlePay.
+ * - validity_time: Reminainig time for payment, in hours.
+ * - validity_time_blocks: Reminainig time for payment, in blocks.
+ *
+ * @ingroup themeable
+ */
+#}
+
+<div class="payment-instructions-turtlecoin turtlepay">
+  <p>Please transfer the amount of <span class="payment-amount">{{ payment_amount }}</span> to <span class="payment-address">{{ turtle_address }}</span></p>
+  <p class="payment-warning">Warning: This address will only be active for about {{ validity_time_blocks }} Blocks ({{ validity_time }}h)</p>
+
+  <img class="payment-qr-code" src="https://chart.googleapis.com/chart?cht=qr&chs=256x256&chl=turtlecoin://{{ turtle_address }}?amount={{ payment_amount|replace({'XTR': ''}) * 100 }}" />
+
+  <a href="https://turtlepay.io" target="_blank">
+    <img src="https://badge.turtlepay.io/" alt="Powered by TurtlePay" />
+  </a>
+</div>

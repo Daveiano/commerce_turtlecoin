@@ -1,0 +1,5 @@
+payment_instructions:
+  version: 8.x-1.x
+  css:
+    theme:
+      css/commerce_turtlecoin.payment_instructions.css: {}

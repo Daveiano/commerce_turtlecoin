@@ -21,7 +21,7 @@ function commerce_turtlecoin_cron() {
   // Get the queue worker.
   $queue_worker = $queue_manager->createInstance('turtlecoin_payment_process_worker');
 
-  // Get the number of items
+  // Get the number of items.
   $number_of_queue = $queue->numberOfItems();
 
   \Drupal::logger('commerce_turtlecoin')->notice('Transactions in queue to process: @number',
@@ -76,4 +76,20 @@ function commerce_turtlecoin_cron() {
     $queue->releaseItem($item);
   }
 
+}
+
+/**
+ * Implements hook_theme().
+ */
+function commerce_turtlecoin_theme($existing, $type, $theme, $path) {
+  return [
+    'turtlecoin_turtle_pay_payment_instructions' => [
+      'variables' => [
+        'payment_amount' => NULL,
+        'turtle_address' => NULL,
+        'validity_time_blocks' => NULL,
+        'validity_time' => NULL,
+      ],
+    ],
+  ];
 }
