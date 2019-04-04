@@ -31,6 +31,7 @@ use Drupal\commerce_payment\Exception\InvalidResponseException;
  *     "receive-payment" = "Drupal\commerce_turtlecoin\PluginForm\TurtleCoinPaymentReceiveForm",
  *   },
  *   modes = {
+ *     "debug" = "Debug",
  *     "live" = "Live",
  *   },
  *   payment_type = "payment_turtle_coin",
@@ -221,7 +222,6 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
 
     // Create an integrated address for better transaction mapping via
     // integrated payment id.
-    // TODO: Is this the way to generate a payment ID?
     try {
       $turtlecoin_payment_id = TurtleCoinBaseController::createPaymentId();
 

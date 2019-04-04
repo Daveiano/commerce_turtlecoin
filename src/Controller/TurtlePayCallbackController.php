@@ -41,7 +41,7 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
   /**
    * Callback for TurtlePay.
    *
-   * TODO: Find a way to access the gateway configuration for debug/live mode.
+   * Reminder: We can access config for debug/live via userDefined data.
    *
    * @param string $secret
    *   A secret and unique string to validate the response.

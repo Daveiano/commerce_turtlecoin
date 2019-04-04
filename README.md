@@ -1,4 +1,8 @@
+[<img align="right" alt="TurtleCoin" width="440" height="440" src="https://raw.githubusercontent.com/turtlecoin/brand/master/logo/web/stacked/turtlecoin_stacked_color%402x.png">](https://turtlecoin.lol)
+<img align="right" alt="TurtlePay Payment Instructions" width="400" height="420" src="https://www.drupal.org/files/project-images/turtlepay-themed-payment-instructions.png">
+
 # Commerce TurtleCoin
+[<img src="https://badge.turtlepay.io/">](https://turtlepay.io)
 
 Payment Gateway for Drupal Commerce to allow payments with [TurtleCoin](https://turtlecoin.lol).
 
@@ -17,8 +21,7 @@ implementation with the [Wallet RPC API](https://api-docs.turtlecoin.lol/?php#wa
 to generate an integrated address on checkout and track the transaction to void it after 
 a given time or complete it if the payment arrives.
 
-The second payment gateway, which is in development will be implemented with 
-[TurtlePay™](https://turtlepay.io/).
+The second payment gateway uses [TurtlePay™](https://turtlepay.io/) to process the payment.
 
 
 ## Installation

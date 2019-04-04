@@ -205,6 +205,9 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
       'amount' => $payment->getAmount()->getNumber() * 100,
       'address' => $this->getConfiguration()['turtlecoin_address_store'],
       'callback' => $this->getConfiguration()['turtlepay_callback_host'] . '/commerce_turtlecoin/api/v1/turtlepay/' . $secret . '/' . $payment->id(),
+      'userDefined' => [
+        'debug' => $this->getConfiguration()['mode'] === 'debug',
+      ],
     ]);
 
     // Perform a request to TurtlePay API.
@@ -228,7 +231,6 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
       // could generate it by ourselves.
       unset($turtlepay_checkout_response['sendToAddress']);
       unset($turtlepay_checkout_response['qrCode']);
-      // TODO: What is callbackPublicKey?
       unset($turtlepay_checkout_response['callbackPublicKey']);
       $payment->turtlepay_checkout_response = Json::encode($turtlepay_checkout_response);
 
