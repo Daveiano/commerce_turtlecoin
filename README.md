@@ -1,5 +1,4 @@
 [<img align="right" alt="TurtleCoin" width="440" height="440" src="https://raw.githubusercontent.com/turtlecoin/brand/master/logo/web/stacked/turtlecoin_stacked_color%402x.png">](https://turtlecoin.lol)
-<img align="right" alt="TurtlePay Payment Instructions" width="400" height="420" src="https://www.drupal.org/files/project-images/turtlepay-themed-payment-instructions.png">
 
 # Commerce TurtleCoin
 [<img src="https://badge.turtlepay.io/">](https://turtlepay.io)
@@ -23,13 +22,14 @@ a given time or complete it if the payment arrives.
 
 The second payment gateway uses [TurtlePay™](https://turtlepay.io/) to process the payment.
 
+<img align="center" alt="TurtlePay Payment Instructions" src="https://www.drupal.org/files/project-images/turtlepay-themed-payment-instructions.png">
 
 ## Installation
 
 The gateway implemented with Wallet RPC API needs a running and connected
 TurtleCoind and turtle-service service.
 
-See here:  [https://github.com/turtlecoin/turtlecoin](https://github.com/turtlecoin/turtlecoin)
+See here: [https://github.com/turtlecoin/turtlecoin](https://github.com/turtlecoin/turtlecoin)
 
 For installation and setting up a wallet see here: [https://github.com/turtlecoin/turtlecoin/wiki/Using-zedwallet](https://github.com/turtlecoin/turtlecoin/wiki/Using-zedwallet)
 
