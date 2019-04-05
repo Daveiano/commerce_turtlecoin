@@ -1,7 +1,8 @@
-# TODO: XTR to TRTL.
+# TODO: Make this as clean as possible.
+# @see: https://www.drupal.org/project/commerce/issues/2952929
 currencyCode: XTR
 name: TurtleCoin
-numericCode: '000'
+numericCode: '998'
 symbol: TRTL
 fractionDigits: 2
 dependencies:
