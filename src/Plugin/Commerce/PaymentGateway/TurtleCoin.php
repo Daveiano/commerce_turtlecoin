@@ -177,7 +177,7 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
   public function buildPaymentInstructions(PaymentInterface $payment) {
     $instructions = [
       '#theme' => 'turtlecoin_turtlecoin_payment_instructions',
-      '#payment_amount' => $payment->getAmount(),
+      '#payment_amount' => str_replace('XTR', 'TRTL', $payment->getAmount()),
       '#turtle_address' => $payment->get('turtle_coin_integrated_address')->value,
       '#validity_time' => $this->getConfiguration()['wait_for_transactions_time'] / 3600,
       '#validity_time_blocks' => $this->getConfiguration()['wait_for_transactions_time'] / 30,

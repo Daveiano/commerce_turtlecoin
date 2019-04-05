@@ -24,10 +24,9 @@ function commerce_turtlecoin_cron() {
   // Get the number of items.
   $number_of_queue = $queue->numberOfItems();
 
-  \Drupal::logger('commerce_turtlecoin')->notice('Transactions in queue to process: @number',
-    array(
-      '@number' => $number_of_queue,
-    ));
+  \Drupal::logger('commerce_turtlecoin')->notice('Transactions in queue to process: @number', [
+    '@number' => $number_of_queue,
+  ]);
 
   $items_to_release = [];
 

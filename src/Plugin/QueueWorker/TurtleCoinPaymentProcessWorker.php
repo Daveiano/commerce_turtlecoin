@@ -52,10 +52,9 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
    */
   public function processItem($item) {
     if ($item->mode === 'debug') {
-      \Drupal::logger('commerce_turtlecoin')->notice('Processing transaction with Payment ID: @payment_id.',
-        array(
-          '@payment_id' => $item->paymentId,
-        ));
+      \Drupal::logger('commerce_turtlecoin')->notice('Processing transaction with Payment ID: @payment_id.', [
+        '@payment_id' => $item->paymentId,
+      ]);
     }
 
     // Create a new turtle-service instance.

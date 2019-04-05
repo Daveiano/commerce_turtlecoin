@@ -17,8 +17,8 @@ Payment Gateways for paying with [TurtleCoin](https://turtlecoin.lol) in
 
 The first is an 
 implementation with the [Wallet RPC API](https://api-docs.turtlecoin.lol/?php#wallet-rpc-api)
-to generate an integrated address on checkout and track the transaction to void it after 
-a given time or complete it if the payment arrives.
+to generate an integrated address on checkout and track the transaction
+to void it after a given time or complete it if the payment arrives.
 
 The second payment gateway uses [TurtlePay™](https://turtlepay.io/) to process the payment.
 
@@ -33,8 +33,8 @@ See here: [https://github.com/turtlecoin/turtlecoin](https://github.com/turtleco
 
 For installation and setting up a wallet see here: [https://github.com/turtlecoin/turtlecoin/wiki/Using-zedwallet](https://github.com/turtlecoin/turtlecoin/wiki/Using-zedwallet)
 
-This module includes two very basic config files you could use for the two services
-as a basis. You can use them via 
+This module includes two very basic config files you could use for the
+two services as a basis. You can use them via
 
 `./TurtleCoind -c path/to/config/TurtleCoind-config.json`
 
