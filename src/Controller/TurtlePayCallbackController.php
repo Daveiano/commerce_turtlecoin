@@ -71,6 +71,9 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
           // funds were received into the wallet within the allowed time.
           $payment->setState('voided');
           $payment->save();
+          \Drupal::logger('commerce_turtlecoin')->notice('TurltePay Response: No payment received! Payment ID: @payment_id.', [
+            '@payment_id' => $payment_id,
+          ]);
           break;
 
         case 402:
@@ -81,6 +84,9 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
           // wallet.
           $payment->setState('partially_payed');
           $payment->save();
+          \Drupal::logger('commerce_turtlecoin')->notice('TurltePay Response: No enough funds received! Payment ID: @payment_id.', [
+            '@payment_id' => $payment_id,
+          ]);
           break;
 
         case 102:
@@ -92,6 +98,9 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
           if ($payment->getState() !== 'in_progress') {
             $payment->setState('in_progress');
             $payment->save();
+            \Drupal::logger('commerce_turtlecoin')->notice('TurltePay Response: Payment in progress! Payment ID: @payment_id.', [
+              '@payment_id' => $payment_id,
+            ]);
           }
           break;
 
@@ -101,6 +110,9 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
           // the specified wallet and enough confirmations have completed.
           $payment->setState('sent');
           $payment->save();
+          \Drupal::logger('commerce_turtlecoin')->notice('TurltePay Response: Sent the funds to your wallet!: @payment_id.', [
+            '@payment_id' => $payment_id,
+          ]);
           break;
 
         case 200:
@@ -109,12 +121,19 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
           $payment->setState('completed');
           $payment->turtlepay_tx_hash = $data['txnHash'];
           $payment->save();
+          \Drupal::logger('commerce_turtlecoin')->notice('Payment completed! Payment ID: @payment_id.', [
+            '@payment_id' => $payment_id,
+          ]);
           break;
       }
 
       return new JsonResponse(['success' => TRUE]);
     }
     else {
+      \Drupal::logger('commerce_turtlecoin')->notice('Invalid post from TurtlePay: Payment ID: @payment_id.', [
+        '@payment_id' => $payment_id,
+      ]);
+
       return new JsonResponse(['success' => FALSE]);
     }
   }
