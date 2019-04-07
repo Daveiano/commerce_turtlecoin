@@ -38,6 +38,24 @@ See here:
 For installation and setting up a wallet see here: 
 [https://github.com/turtlecoin/turtlecoin/wiki/Using-zedwallet](https://github.com/turtlecoin/turtlecoin/wiki/Using-zedwallet)
 
+The instructions from the 
+<a href="https://github.com/turtlecoin/turtlecoin-woocommerce-gateway#set-up-turtlecoin-daemon-and-turtle-service">
+turtlecoin-woocommerce-gateway</a> are also very useful 
+([Link](https://github.com/turtlecoin/turtlecoin-woocommerce-gateway#set-up-turtlecoin-daemon-and-turtle-service)):
+
+<blockquote>After downloading (or compiling) the TurtleCoin binaries on your 
+server, run <code>TurtleCoind</code> and <code>turtle-service</code>. 
+You can skip running <code>TurtleCoind</code> by using a remote node 
+with <code>turtle-service</code> by adding <code>--daemon-address</code> 
+and the address of a public node.  
+
+
+Note on security: using this option, while the most secure, requires you to run 
+the Turtle-Service program on your server. Best practice for this is to use a 
+view-only wallet since otherwise your server would be running a hot-wallet and 
+a security breach could allow hackers to empty your funds.</blockquote>
+
+
 This module includes two very basic config files you could use for the
 two services as a basis. You can use them via
 
