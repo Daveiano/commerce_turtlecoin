@@ -26,32 +26,3 @@ commerce_payment.commerce_payment_gateway.plugin.turtlepay_payment_gateway:
     turtlepay_callback_host:
       type: string
       label: 'The host to use for the incoming TurtlePay status updates.'
-
-commerce_payment.commerce_payment_type.plugin.payment_turtle_coin:
-  type: commerce_payment_type_configuration
-  mapping:
-    turtle_coin_integrated_address:
-      type: string
-      label: 'Integrated address'
-    turtle_coin_block_index:
-      type: integer
-      label: 'Block Index'
-    turtle_coin_tx_hash:
-      type: string
-      label: 'Transaction Hash'
-
-commerce_payment.commerce_payment_type.plugin.payment_turtle_pay:
-  type: commerce_payment_type_configuration
-  mapping:
-    turtlepay_checkout_response:
-      type: string
-      label: 'Response from TurtlePay while checkout.'
-    turtlepay_callback_secret:
-      type: string
-      label: 'A secret string to validate the callback response.'
-    turtlepay_callback_response:
-      type: string_long
-      label: 'TurtlePay Callback Response'
-    turtlepay_tx_hash:
-      type: string
-      label: 'Transaction Hash'
