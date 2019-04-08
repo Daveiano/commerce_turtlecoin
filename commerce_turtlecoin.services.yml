@@ -1,0 +1,5 @@
+services:
+  commerce_turtlecoin.exchange_rate_crypto_compare:
+    class: Drupal\commerce_turtlecoin\EventSubscriber\ExchangeRateCryptoCompare
+    tags:
+      - { name: event_subscriber }
