@@ -5,10 +5,9 @@ namespace Drupal\commerce_turtlecoin\EventSubscriber;
 use Drupal\commerce_currency_resolver\CurrencyHelper;
 use Drupal\commerce_currency_resolver\ExchangeRateEventSubscriberBase;
 use Drupal\Component\Serialization\Json;
-use GuzzleHttp\Exception\RequestException;
 
 /**
- * Class ExchangeRateCoinMarketCap.
+ * Class ExchangeRateCryptoCompare.
  */
 class ExchangeRateCryptoCompare extends ExchangeRateEventSubscriberBase {
 
