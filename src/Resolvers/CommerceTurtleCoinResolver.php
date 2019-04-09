@@ -46,6 +46,8 @@ class CommerceTurtleCoinResolver implements PriceResolverInterface {
 
     // Get the current order.
     $order = \Drupal::routeMatch()->getParameter('commerce_order');
+    // TODO: Seems also to not work.
+    ddl($order->get('payment_gateway')->isEmpty());
     if (!empty($order) && !$order->get('payment_gateway')->isEmpty()) {
       // Check for the used payment gateway, we want TRTL in case
       // of turtle_coin and turtle_pay.
@@ -70,6 +72,15 @@ class CommerceTurtleCoinResolver implements PriceResolverInterface {
       // TODO: Fix for XTR currency code.
       if ($payment_gateway_plugin_id === 'turtlepay_payment_gateway' && $price->getCurrencyCode() !== 'XTR') {
         $resolved_price = CurrencyHelper::priceConversion($price, 'XTR');
+
+        // TODO: Does not work.
+        /*$order_items = $order->getItems();
+        foreach ($order_items as $order_item) {
+          $order_item->setUnitPrice(CurrencyHelper::priceConversion($order_item->getUnitPrice(), 'XTR'), TRUE);
+        }*/
+
+        //$order->recalculateTotalPrice();
+        //$order->save();
 
         return $resolved_price;
       }
