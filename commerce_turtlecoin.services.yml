@@ -1,9 +1,9 @@
 services:
-  commerce_turtlecoin.commerce_turtlecoin_resolver:
+  commerce_turtlecoin.commerce_turtlecoin_price_resolver:
     class: Drupal\commerce_turtlecoin\Resolvers\CommerceTurtleCoinResolver
     arguments: ['@commerce_currency_resolver.current_currency']
     tags:
-      - { name: commerce_price.price_resolver, priority: 999 }
+      - { name: commerce_price.price_resolver, priority: 1001 }
 
   commerce_turtlecoin.exchange_rate_crypto_compare:
     class: Drupal\commerce_turtlecoin\EventSubscriber\ExchangeRateCryptoCompare
