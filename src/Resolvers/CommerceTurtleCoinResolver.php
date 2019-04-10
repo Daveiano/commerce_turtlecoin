@@ -45,10 +45,16 @@ class CommerceTurtleCoinResolver implements PriceResolverInterface {
     $price = NULL;
 
     // Get the current order.
-    $order = \Drupal::routeMatch()->getParameter('commerce_order');
+    //$order = \Drupal::routeMatch()->getParameter('commerce_order');
+    /* @var CurrentStoreInterface $cs */
+    $cs = \Drupal::service('commerce_store.current_store');
+    /* @var CartProviderInterface $cpi */
+    $cpi = \Drupal::service('commerce_cart.cart_provider');
+    $order = $cpi->getCart('default', $cs->getStore());
+
     // TODO: Seems also to not work.
-    ddl($order->get('payment_gateway')->isEmpty());
     if (!empty($order) && !$order->get('payment_gateway')->isEmpty()) {
+      ddl('CommerceTurtleCoinResolver');
       // Check for the used payment gateway, we want TRTL in case
       // of turtle_coin and turtle_pay.
       $payment_gateway_plugin_id = $order->payment_gateway->entity->getPluginId();

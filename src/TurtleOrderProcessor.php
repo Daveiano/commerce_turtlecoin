@@ -70,7 +70,7 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
           if (/*!$item->hasPurchasedEntity()*/$price->getCurrencyCode() !== 'XTR') {
             // Auto calculate price.
             $item->setUnitPrice(CurrencyHelper::priceConversion($price, 'XTR'));
-            $item->save();
+            //$item->save();
           }
         }
 
@@ -84,7 +84,7 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
         //$order->setRefreshState(Order::REFRESH_ON_LOAD);
 
         // Save order.
-        $order->save();
+        //$order->save();
       }
     }
   }
