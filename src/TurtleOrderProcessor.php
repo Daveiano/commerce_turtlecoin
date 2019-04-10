@@ -53,8 +53,8 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
    */
   public function process(OrderInterface $order) {
     ddl($order->id());
-
-    if ($total = $order->getTotalPrice() && !$order->get('payment_gateway')->isEmpty()) {
+    $total = $order->getTotalPrice();
+    if ($total && !$order->get('payment_gateway')->isEmpty()) {
       $payment_gateway_plugin_id = $order->payment_gateway->entity->getPluginId();
 
       // TODO: Fix for XTR currency code.
@@ -64,25 +64,27 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
 
         // Loop trough all order items and find ones without PurchasableEntity
         // They need to automatically converted.
-        //foreach ($items as $item) {
-          //$price = $item->getUnitPrice();
+        foreach ($items as $item) {
+          $price = $item->getUnitPrice();
           /** @var \Drupal\commerce_order\Entity\OrderItem $item */
-          //if (/*!$item->hasPurchasedEntity()*/$price->getCurrencyCode() !== 'XTR') {
+          if (/*!$item->hasPurchasedEntity()*/$price->getCurrencyCode() !== 'XTR') {
             // Auto calculate price.
-            //$item->setUnitPrice(CurrencyHelper::priceConversion($price, 'XTR'));
-          //}
-        //}
+            $item->setUnitPrice(CurrencyHelper::priceConversion($price, 'XTR'));
+            $item->save();
+          }
+        }
 
         // Get new total price.
-        //$order = $order->recalculateTotalPrice();
-        //ddl($order->getTotalPrice()->getCurrencyCode());
+        $order->setData('currency_resolver_skip', TRUE);
+        $order->recalculateTotalPrice();
+        ddl($order->getTotalPrice()->getCurrencyCode());
 
         // Refresh order on load. Shipping fix. Probably all other potential
         // unlocked adjustments which are not set correctly.
         //$order->setRefreshState(Order::REFRESH_ON_LOAD);
 
         // Save order.
-        //$order->save();
+        $order->save();
       }
     }
   }
