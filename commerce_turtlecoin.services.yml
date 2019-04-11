@@ -1,7 +1,11 @@
 services:
+  commerce_turtlecoin.current_currency_based_on_gateway:
+    class: Drupal\commerce_turtlecoin\CurrentCurrencyBasedOnGateway
+    arguments: ['@request_stack']
+
   commerce_turtlecoin.commerce_turtlecoin_price_resolver:
     class: Drupal\commerce_turtlecoin\Resolvers\CommerceTurtleCoinResolver
-    arguments: ['@commerce_currency_resolver.current_currency']
+    arguments: ['@commerce_turtlecoin.current_currency_based_on_gateway']
     tags:
       - { name: commerce_price.price_resolver, priority: 1001 }
 

@@ -44,55 +44,68 @@ class CommerceTurtleCoinResolver implements PriceResolverInterface {
     // Default price.
     $price = NULL;
 
-    // Get the current order.
-    //$order = \Drupal::routeMatch()->getParameter('commerce_order');
-    /* @var CurrentStoreInterface $cs */
-    $cs = \Drupal::service('commerce_store.current_store');
-    /* @var CartProviderInterface $cpi */
-    $cpi = \Drupal::service('commerce_cart.cart_provider');
-    $order = $cpi->getCart('default', $cs->getStore());
+    // Get field from context.
+    $field_name = $context->getData('field_name', 'price');
 
-    // TODO: Seems also to not work.
-    if (!empty($order) && !$order->get('payment_gateway')->isEmpty()) {
-      ddl('CommerceTurtleCoinResolver');
-      // Check for the used payment gateway, we want TRTL in case
-      // of turtle_coin and turtle_pay.
-      $payment_gateway_plugin_id = $order->payment_gateway->entity->getPluginId();
-      ddl($payment_gateway_plugin_id);
-      // Get current resolved currency.
-      // TODO: $price->getCurrencyCode() or $resolved_currency.
-      $resolved_currency = $this->currentCurrency->getCurrency();
-
-      // Get field from context.
-      // @see Drupal\commerce_currency_resolver\Resolver\CommerceCurrencyResolver.
-      $field_name = $context->getData('field_name', 'price');
-
-      // @see \Drupal\commerce_price\Resolver\DefaultPriceResolver
-      if ($field_name === 'price') {
-        $price = $entity->getPrice();
-      }
-      elseif ($entity->hasField($field_name) && !$entity->get($field_name)->isEmpty()) {
-        $price = $entity->get($field_name)->first()->toPrice();
-      }
-
-      // TODO: Fix for XTR currency code.
-      if ($payment_gateway_plugin_id === 'turtlepay_payment_gateway' && $price->getCurrencyCode() !== 'XTR') {
-        $resolved_price = CurrencyHelper::priceConversion($price, 'XTR');
-
-        // TODO: Does not work.
-        /*$order_items = $order->getItems();
-        foreach ($order_items as $order_item) {
-          $order_item->setUnitPrice(CurrencyHelper::priceConversion($order_item->getUnitPrice(), 'XTR'), TRUE);
-        }*/
-
-        //$order->recalculateTotalPrice();
-        //$order->save();
-
-        return $resolved_price;
-      }
+    // @see \Drupal\commerce_price\Resolver\DefaultPriceResolver
+    if ($field_name === 'price') {
+      $price = $entity->getPrice();
+    }
+    elseif ($entity->hasField($field_name) && !$entity->get($field_name)->isEmpty()) {
+      $price = $entity->get($field_name)->first()->toPrice();
     }
 
-    return $price;
+    // If we have price.
+    if ($price) {
+
+      // Loading orders trough drush, or any cli task
+      // will resolve price by current conditions in which cli is
+      // (country, language, current store) - this will result in
+      // currency exception. We need to return existing price.
+      if (PHP_SAPI === 'cli') {
+        return $price;
+      }
+
+      // Get current resolved currency.
+      $resolved_currency = $this->currentCurrency->getCurrency();
+
+      // Different currencies, we need resolve to new price.
+      if ($resolved_currency !== $price->getCurrencyCode()) {
+
+        // Get how price should be calculated.
+        $currency_source = $this->getCurrencySource();
+
+        // Auto-calculate price by default. Fallback for all cases regardless
+        // of chosen currency source mode.
+        $resolved_price = CurrencyHelper::priceConversion($price, $resolved_currency);
+
+        // Specific cases for field and combo. Even we had autocalculated
+        // price, in combo mode we could have field with price.
+        if ($currency_source === 'combo' || $currency_source === 'field') {
+
+          // Backward compatibility for older version, and inital setup
+          // that default price fields are mapped to field_price_currency_code
+          // instead to price_currency_code.
+          if ($field_name === 'price') {
+            $field_name = 'field_price';
+          }
+
+          $resolved_field = $field_name . '_' . strtolower($resolved_currency);
+
+          // Check if we have field.
+          if ($entity->hasField($resolved_field) && !$entity->get($resolved_field)
+              ->isEmpty()) {
+            $resolved_price = $entity->get($resolved_field)->first()->toPrice();
+          }
+        }
+
+        return $resolved_price;
+
+      }
+
+      // Return price if conversion is not needed.
+      return $price;
+    }
   }
 
 }
