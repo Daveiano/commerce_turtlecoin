@@ -17,6 +17,8 @@ use Drupal\commerce_currency_resolver\Resolver\CommerceCurrencyResolver;
  */
 class CommerceTurtleCoinResolver implements PriceResolverInterface {
 
+  use CommerceCurrencyResolverTrait;
+
   /**
    * The current currency.
    *
@@ -44,40 +46,31 @@ class CommerceTurtleCoinResolver implements PriceResolverInterface {
     // Default price.
     $price = NULL;
 
-    // Get field from context.
-    $field_name = $context->getData('field_name', 'price');
+    ddl('TRTL resolve');
+    ddl($this->currentCurrency->getCurrency());
 
-    // @see \Drupal\commerce_price\Resolver\DefaultPriceResolver
-    if ($field_name === 'price') {
-      $price = $entity->getPrice();
-    }
-    elseif ($entity->hasField($field_name) && !$entity->get($field_name)->isEmpty()) {
-      $price = $entity->get($field_name)->first()->toPrice();
-    }
+    // TODO: Fix for 'XTR'.
+    if ($this->currentCurrency->getCurrency() === 'XTR') {
+      ddl('Resolve XTR');
+      // Get field from context.
+      $field_name = $context->getData('field_name', 'price');
 
-    // If we have price.
-    if ($price) {
-
-      // Loading orders trough drush, or any cli task
-      // will resolve price by current conditions in which cli is
-      // (country, language, current store) - this will result in
-      // currency exception. We need to return existing price.
-      if (PHP_SAPI === 'cli') {
-        return $price;
+      // @see \Drupal\commerce_price\Resolver\DefaultPriceResolver
+      if ($field_name === 'price') {
+        $price = $entity->getPrice();
+      }
+      elseif ($entity->hasField($field_name) && !$entity->get($field_name)->isEmpty()) {
+        $price = $entity->get($field_name)->first()->toPrice();
       }
 
-      // Get current resolved currency.
-      $resolved_currency = $this->currentCurrency->getCurrency();
-
-      // Different currencies, we need resolve to new price.
-      if ($resolved_currency !== $price->getCurrencyCode()) {
-
+      // If we have price.
+      if ($price && $price->getCurrencyCode() !== 'XTR') {
         // Get how price should be calculated.
         $currency_source = $this->getCurrencySource();
 
         // Auto-calculate price by default. Fallback for all cases regardless
         // of chosen currency source mode.
-        $resolved_price = CurrencyHelper::priceConversion($price, $resolved_currency);
+        $resolved_price = CurrencyHelper::priceConversion($price, 'XTR');
 
         // Specific cases for field and combo. Even we had autocalculated
         // price, in combo mode we could have field with price.
@@ -90,22 +83,22 @@ class CommerceTurtleCoinResolver implements PriceResolverInterface {
             $field_name = 'field_price';
           }
 
-          $resolved_field = $field_name . '_' . strtolower($resolved_currency);
+          $resolved_field = $field_name . '_' . strtolower('XTR');
 
           // Check if we have field.
-          if ($entity->hasField($resolved_field) && !$entity->get($resolved_field)
-              ->isEmpty()) {
+          if ($entity->hasField($resolved_field) && !$entity->get($resolved_field)->isEmpty()) {
             $resolved_price = $entity->get($resolved_field)->first()->toPrice();
           }
         }
 
         return $resolved_price;
-
       }
 
       // Return price if conversion is not needed.
       return $price;
     }
+
+    return $price;
   }
 
 }

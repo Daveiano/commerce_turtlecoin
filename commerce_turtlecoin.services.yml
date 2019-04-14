@@ -3,19 +3,26 @@ services:
     class: Drupal\commerce_turtlecoin\CurrentCurrencyBasedOnGateway
     arguments: ['@request_stack']
 
+  # TODO: Why does this need a higher priority to be called first?
   commerce_turtlecoin.commerce_turtlecoin_price_resolver:
     class: Drupal\commerce_turtlecoin\Resolvers\CommerceTurtleCoinResolver
     arguments: ['@commerce_turtlecoin.current_currency_based_on_gateway']
     tags:
-      - { name: commerce_price.price_resolver, priority: 1001 }
+      - { name: commerce_price.price_resolver, priority: 1500 }
 
   commerce_turtlecoin.turtle_order_processor:
     class: Drupal\commerce_turtlecoin\TurtleOrderProcessor
-    arguments: ['@entity_type.manager', '@current_user', '@current_route_match']
+    arguments: ['@entity_type.manager', '@current_user', '@current_route_match', '@commerce_turtlecoin.current_currency_based_on_gateway']
     tags:
-      - { name: commerce_order.order_processor, priority: 1001 }
+      - { name: commerce_order.order_processor, priority: 600 }
 
   commerce_turtlecoin.exchange_rate_crypto_compare:
     class: Drupal\commerce_turtlecoin\EventSubscriber\ExchangeRateCryptoCompare
+    tags:
+      - { name: event_subscriber }
+
+  commerce_turtlecoin.order_currency:
+    class: Drupal\commerce_turtlecoin\EventSubscriber\TurtleCoinCurrencyOrderRefresh
+    arguments: ['@entity_type.manager', '@commerce_order.order_refresh','@current_user', '@current_route_match']
     tags:
       - { name: event_subscriber }
