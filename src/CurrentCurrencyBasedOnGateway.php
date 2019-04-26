@@ -48,13 +48,12 @@ class CurrentCurrencyBasedOnGateway implements CurrentCurrencyInterface {
     $cpi = \Drupal::service('commerce_cart.cart_provider');
     $order = $cpi->getCart('default', $cs->getStore());
 
-    if ($order && $total = $order->getTotalPrice()) {
-      if ($total && !$order->get('payment_gateway')->isEmpty()) {
-        $payment_gateway_plugin_id = $order->payment_gateway->entity->getPluginId();
+    if ($order && !$order->get('payment_gateway')->isEmpty()) {
+      $payment_gateway_plugin_id = $order->payment_gateway->entity->getPluginId();
 
-        if ($payment_gateway_plugin_id === 'turtlepay_payment_gateway') {
-          $currency = 'XTR';
-        }
+      // TODO: Add Turtle RPC.
+      if ($payment_gateway_plugin_id === 'turtlepay_payment_gateway') {
+        $currency = 'XTR';
       }
     }
 

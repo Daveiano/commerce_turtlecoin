@@ -34,13 +34,6 @@ class TurtleCoinCurrencyOrderRefresh implements EventSubscriberInterface {
   protected $orderStorage;
 
   /**
-   * Current currency.
-   *
-   * @var \Drupal\commerce_currency_resolver\CurrentCurrencyInterface
-   */
-  protected $currentCurrency;
-
-  /**
    * The current user.
    *
    * @var \Drupal\Core\Session\AccountInterface
@@ -91,23 +84,25 @@ class TurtleCoinCurrencyOrderRefresh implements EventSubscriberInterface {
 
       $order_currency = $order_total->getCurrencyCode();
       $order_payment = $order->payment_gateway->entity->getPluginId();
+      $currency_resolver_skip = $order->getData('currency_resolver_skip');
+      $commerce_turtlecoin_skipped = $order->getData('commerce_turtlecoin_skipped');
 
       // Compare order total and main resolved currency.
       // Refresh order if they are different. We need then alter total price.
       // This will trigger order processor which will handle
       // correction of total order price and currency.
       // TODO: shouldCurrencyRefresh on own conditions.
-      if (($order_currency !== 'XTR') && ($order_payment === 'turtlepay_payment_gateway') && ($this->shouldCurrencyRefresh($order))) {
-
-        /*ddl('REFRESH');
-        ddl($order_total->getCurrencyCode());*/
-
+      if (($order_currency !== 'XTR') && ($order_payment === 'turtlepay_payment_gateway')/* && ($this->shouldCurrencyRefresh($order))*/) {
         // Check if we can refresh order.
         $this->orderRefresh->refresh($order);
         $order->save();
-
-        /*ddl('REFRESH');
-        ddl($order_total->getCurrencyCode());*/
+      }
+      // TODO: Add Turtle RPC.
+      // TODO: What should be the condition here? Resolved currency from currency_resolver?
+      // Resolved currency from currency_resolver && ($currency_resolver_skip && $commerce_turtlecoin_skipped) && shouldrefresh
+      elseif ($currency_resolver_skip && $commerce_turtlecoin_skipped && ($order_payment !== 'turtlepay_payment_gateway') && ($order_currency === 'XTR')) {
+        $this->orderRefresh->refresh($order);
+        $order->save();
       }
     }
   }

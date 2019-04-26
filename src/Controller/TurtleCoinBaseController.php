@@ -6,6 +6,8 @@ use Drupal\Core\Controller\ControllerBase;
 
 /**
  * Defines TurtleCoinBaseController class.
+ *
+ * TODO: Add two methods as string consts here for checking in currency resolve.
  */
 class TurtleCoinBaseController extends ControllerBase {
 

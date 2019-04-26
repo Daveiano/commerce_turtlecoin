@@ -46,12 +46,8 @@ class CommerceTurtleCoinResolver implements PriceResolverInterface {
     // Default price.
     $price = NULL;
 
-    ddl('TRTL resolve');
-    ddl($this->currentCurrency->getCurrency());
-
     // TODO: Fix for 'XTR'.
     if ($this->currentCurrency->getCurrency() === 'XTR') {
-      ddl('Resolve XTR');
       // Get field from context.
       $field_name = $context->getData('field_name', 'price');
 
