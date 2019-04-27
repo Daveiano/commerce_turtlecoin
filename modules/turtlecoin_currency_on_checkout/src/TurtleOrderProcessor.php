@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\commerce_turtlecoin;
+namespace Drupal\turtlecoin_currency_on_checkout;
 
 use Drupal\commerce_currency_resolver\CurrencyHelper;
 use Drupal\commerce_order\Entity\Order;
@@ -9,6 +9,7 @@ use Drupal\commerce_order\OrderProcessorInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
 
 /**
  * Class TurtleOrderProcessor.
@@ -54,11 +55,10 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
     if ($order && !$order->get('payment_gateway')->isEmpty()) {
       $payment_gateway_plugin_id = $order->payment_gateway->entity->getPluginId();
 
-      // TODO: Add Turtle RPC.
-      if ($payment_gateway_plugin_id === 'turtlepay_payment_gateway') {
+      if (in_array($payment_gateway_plugin_id, TurtleCoinBaseController::TURTLE_PAYMENT_GATEWAYS)) {
         $total = $order->getTotalPrice();
 
-        if ($total->getCurrencyCode() !== 'XTR') {
+        if ($total->getCurrencyCode() !== TurtleCoinBaseController::TURTLE_CURRENCY_CODE) {
           // Get order items.
           $items = $order->getItems();
 
@@ -69,7 +69,7 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
             if (!$item->hasPurchasedEntity()) {
               $price = $item->getUnitPrice();
               // Auto calculate price.
-              $item->setUnitPrice(CurrencyHelper::priceConversion($price, 'XTR'));
+              $item->setUnitPrice(CurrencyHelper::priceConversion($price, TurtleCoinBaseController::TURTLE_CURRENCY_CODE));
             }
           }
 
@@ -83,8 +83,7 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
           $order->setRefreshState(Order::REFRESH_ON_LOAD);
         }
       }
-      elseif ($order->getData('currency_resolver_skip') && $order->getData('commerce_turtlecoin_skipped') && $payment_gateway_plugin_id !== 'turtlepay_payment_gateway') {
-        // TODO: Add condition.
+      elseif ($order->getData('currency_resolver_skip') && $order->getData('commerce_turtlecoin_skipped') && !in_array($payment_gateway_plugin_id, TurtleCoinBaseController::TURTLE_PAYMENT_GATEWAYS)) {
         $order->setData('currency_resolver_skip', FALSE);
         $order->setData('commerce_turtlecoin_skipped', FALSE);
         $order->setRefreshState(Order::REFRESH_ON_LOAD);

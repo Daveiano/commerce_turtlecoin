@@ -1,0 +1,27 @@
+services:
+  commerce_turtlecoin_currency_on_checkout.current_currency_based_on_gateway:
+    class: Drupal\turtlecoin_currency_on_checkout\CurrentCurrencyBasedOnGateway
+    arguments: ['@request_stack']
+
+  commerce_turtlecoin_currency_on_checkout.commerce_turtlecoin_price_resolver:
+    class: Drupal\turtlecoin_currency_on_checkout\Resolvers\CommerceTurtleCoinResolver
+    arguments: ['@commerce_turtlecoin_currency_on_checkout.current_currency_based_on_gateway']
+    tags:
+      - { name: commerce_price.price_resolver, priority: 1500 }
+
+  commerce_turtlecoin_currency_on_checkout.turtle_order_processor:
+    class: Drupal\turtlecoin_currency_on_checkout\TurtleOrderProcessor
+    arguments: ['@entity_type.manager', '@current_user', '@current_route_match']
+    tags:
+      - { name: commerce_order.order_processor, priority: 500 }
+
+  commerce_turtlecoin_currency_on_checkout.exchange_rate_crypto_compare:
+    class: Drupal\turtlecoin_currency_on_checkout\EventSubscriber\ExchangeRateCryptoCompare
+    tags:
+      - { name: event_subscriber }
+
+  commerce_turtlecoin_currency_on_checkout.order_currency:
+    class: Drupal\turtlecoin_currency_on_checkout\EventSubscriber\TurtleCoinCurrencyOrderRefresh
+    arguments: ['@entity_type.manager', '@commerce_order.order_refresh','@current_user', '@current_route_match']
+    tags:
+      - { name: event_subscriber }

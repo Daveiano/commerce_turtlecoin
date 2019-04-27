@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\commerce_turtlecoin\EventSubscriber;
+namespace Drupal\turtlecoin_currency_on_checkout\EventSubscriber;
 
 use Drupal\commerce_currency_resolver\CurrencyHelper;
 use Drupal\commerce_currency_resolver\ExchangeRateEventSubscriberBase;

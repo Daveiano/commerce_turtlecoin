@@ -1,14 +1,15 @@
 <?php
 
-namespace Drupal\commerce_turtlecoin\EventSubscriber;
+namespace Drupal\turtlecoin_currency_on_checkout\EventSubscriber;
 
-use Drupal\commerce_currency_resolver\CommerceCurrencyResolversRefreshTrait;
+use Drupal\turtlecoin_currency_on_checkout\CommerceTurtleCoinResolversRefreshTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal\commerce_order\Event\OrderEvent;
 use Drupal\commerce_order\OrderRefreshInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
 
 /**
  * Checking for mismatch in currencies on order.
@@ -17,7 +18,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
  */
 class TurtleCoinCurrencyOrderRefresh implements EventSubscriberInterface {
 
-  use CommerceCurrencyResolversRefreshTrait;
+  use CommerceTurtleCoinResolversRefreshTrait;
 
   /**
    * The order refresh.
@@ -81,26 +82,21 @@ class TurtleCoinCurrencyOrderRefresh implements EventSubscriberInterface {
     // Get order total currency.
     $order_total = $order->getTotalPrice();
     if ($order_total && !$order->get('payment_gateway')->isEmpty()) {
-
       $order_currency = $order_total->getCurrencyCode();
       $order_payment = $order->payment_gateway->entity->getPluginId();
-      $currency_resolver_skip = $order->getData('currency_resolver_skip');
-      $commerce_turtlecoin_skipped = $order->getData('commerce_turtlecoin_skipped');
+      $turtlecoin_payment_gateways = TurtleCoinBaseController::TURTLE_PAYMENT_GATEWAYS;
+      $turtlecoin_currency_code = TurtleCoinBaseController::TURTLE_CURRENCY_CODE;
 
       // Compare order total and main resolved currency.
       // Refresh order if they are different. We need then alter total price.
       // This will trigger order processor which will handle
       // correction of total order price and currency.
-      // TODO: shouldCurrencyRefresh on own conditions.
-      if (($order_currency !== 'XTR') && ($order_payment === 'turtlepay_payment_gateway')/* && ($this->shouldCurrencyRefresh($order))*/) {
+      if (($order_currency !== $turtlecoin_currency_code) && in_array($order_payment, $turtlecoin_payment_gateways) && $this->shouldCurrencyRefresh($order)) {
         // Check if we can refresh order.
         $this->orderRefresh->refresh($order);
         $order->save();
       }
-      // TODO: Add Turtle RPC.
-      // TODO: What should be the condition here? Resolved currency from currency_resolver?
-      // Resolved currency from currency_resolver && ($currency_resolver_skip && $commerce_turtlecoin_skipped) && shouldrefresh
-      elseif ($currency_resolver_skip && $commerce_turtlecoin_skipped && ($order_payment !== 'turtlepay_payment_gateway') && ($order_currency === 'XTR')) {
+      elseif ($this->turtleCoinSetSkip($order) && !in_array($order_payment, $turtlecoin_payment_gateways) && ($order_currency === $turtlecoin_currency_code) && $this->shouldCurrencyRefresh($order)) {
         $this->orderRefresh->refresh($order);
         $order->save();
       }

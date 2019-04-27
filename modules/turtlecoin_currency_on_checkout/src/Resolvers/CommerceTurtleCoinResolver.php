@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\commerce_turtlecoin\Resolvers;
+namespace Drupal\turtlecoin_currency_on_checkout\Resolvers;
 
 use Drupal\commerce\Context;
 use Drupal\commerce\PurchasableEntityInterface;
@@ -8,7 +8,7 @@ use Drupal\commerce_currency_resolver\CommerceCurrencyResolverTrait;
 use Drupal\commerce_price\Resolver\PriceResolverInterface;
 use Drupal\commerce_currency_resolver\CurrencyHelper;
 use Drupal\commerce_currency_resolver\CurrentCurrencyInterface;
-use Drupal\commerce_currency_resolver\Resolver\CommerceCurrencyResolver;
+use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
 
 /**
  * Returns a price and currency depending of language or country.
@@ -38,16 +38,12 @@ class CommerceTurtleCoinResolver implements PriceResolverInterface {
 
   /**
    * {@inheritdoc}
-   *
-   * TODO: Implement TRTL conversion based on used payment
-   * gateway for current order.
    */
   public function resolve(PurchasableEntityInterface $entity, $quantity, Context $context) {
     // Default price.
     $price = NULL;
 
-    // TODO: Fix for 'XTR'.
-    if ($this->currentCurrency->getCurrency() === 'XTR') {
+    if ($this->currentCurrency->getCurrency() === TurtleCoinBaseController::TURTLE_CURRENCY_CODE) {
       // Get field from context.
       $field_name = $context->getData('field_name', 'price');
 
@@ -60,13 +56,13 @@ class CommerceTurtleCoinResolver implements PriceResolverInterface {
       }
 
       // If we have price.
-      if ($price && $price->getCurrencyCode() !== 'XTR') {
+      if ($price && $price->getCurrencyCode() !== TurtleCoinBaseController::TURTLE_CURRENCY_CODE) {
         // Get how price should be calculated.
         $currency_source = $this->getCurrencySource();
 
         // Auto-calculate price by default. Fallback for all cases regardless
         // of chosen currency source mode.
-        $resolved_price = CurrencyHelper::priceConversion($price, 'XTR');
+        $resolved_price = CurrencyHelper::priceConversion($price, TurtleCoinBaseController::TURTLE_CURRENCY_CODE);
 
         // Specific cases for field and combo. Even we had autocalculated
         // price, in combo mode we could have field with price.
@@ -79,7 +75,7 @@ class CommerceTurtleCoinResolver implements PriceResolverInterface {
             $field_name = 'field_price';
           }
 
-          $resolved_field = $field_name . '_' . strtolower('XTR');
+          $resolved_field = $field_name . '_' . strtolower(TurtleCoinBaseController::TURTLE_CURRENCY_CODE);
 
           // Check if we have field.
           if ($entity->hasField($resolved_field) && !$entity->get($resolved_field)->isEmpty()) {

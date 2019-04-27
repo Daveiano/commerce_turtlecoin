@@ -1,17 +1,17 @@
 <?php
 
-namespace Drupal\commerce_turtlecoin;
+namespace Drupal\turtlecoin_currency_on_checkout;
 
 use Drupal\commerce_currency_resolver\CurrentCurrencyInterface;
-use Drupal\commerce_currency_resolver\CommerceCurrencyResolverTrait;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
 
 /**
- * Holds a reference to the currency, resolved on demand.
+ * Checks if order currency should be TRTL.
+ *
+ * Decision is made based on payment gateway.
  */
 class CurrentCurrencyBasedOnGateway implements CurrentCurrencyInterface {
-
-  use CommerceCurrencyResolverTrait;
 
   /**
    * The request stack.
@@ -21,18 +21,10 @@ class CurrentCurrencyBasedOnGateway implements CurrentCurrencyInterface {
   protected $requestStack;
 
   /**
-   * Static cache of resolved currency. One per request.
-   *
-   * @var string
-   */
-  protected $currency;
-
-  /**
    * {@inheritdoc}
    */
   public function __construct(RequestStack $request_stack) {
     $this->requestStack = $request_stack;
-    $this->currency = new \SplObjectStorage();
   }
 
   /**
@@ -41,7 +33,6 @@ class CurrentCurrencyBasedOnGateway implements CurrentCurrencyInterface {
   public function getCurrency() {
     $currency = NULL;
 
-    // TODO: Use dependency injection.
     /* @var CurrentStoreInterface $cs */
     $cs = \Drupal::service('commerce_store.current_store');
     /* @var CartProviderInterface $cpi */
@@ -51,9 +42,8 @@ class CurrentCurrencyBasedOnGateway implements CurrentCurrencyInterface {
     if ($order && !$order->get('payment_gateway')->isEmpty()) {
       $payment_gateway_plugin_id = $order->payment_gateway->entity->getPluginId();
 
-      // TODO: Add Turtle RPC.
-      if ($payment_gateway_plugin_id === 'turtlepay_payment_gateway') {
-        $currency = 'XTR';
+      if (in_array($payment_gateway_plugin_id, TurtleCoinBaseController::TURTLE_PAYMENT_GATEWAYS)) {
+        $currency = TurtleCoinBaseController::TURTLE_CURRENCY_CODE;
       }
     }
 

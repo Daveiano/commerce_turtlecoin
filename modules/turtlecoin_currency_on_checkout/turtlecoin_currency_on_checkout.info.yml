@@ -1,0 +1,8 @@
+name: Commerce TurtleCoin Currency on Checkout
+type: module
+description: 'Resolves the order currency to TRTL on checkout if a Turtle Payment Gateway was used.'
+package: Commerce (contrib)
+core: 8.x
+dependencies:
+  - commerce:commerce_turtlecoin
+  - commerce_currency_resolver
