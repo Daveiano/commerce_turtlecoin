@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\commerce\Functional;
+namespace Drupal\Tests\commerce_turtlecoin\Functional;
 
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
