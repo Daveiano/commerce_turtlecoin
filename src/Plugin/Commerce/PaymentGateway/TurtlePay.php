@@ -201,7 +201,6 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
     // Generate a secret and unique string for the callback url.
     $secret = Crypt::randomBytesBase64(96);
     $payment_amount = floatval($payment->getAmount()->getNumber()) * 100;
-    ddl($payment_amount);
 
     $data = Json::encode([
       // TODO: PHP 7.1 does strange things with the numbers?
@@ -212,8 +211,6 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
         'debug' => $this->getConfiguration()['mode'] === 'debug',
       ],
     ]);
-
-    ddl($data);
 
     // Perform a request to TurtlePay API.
     try {
