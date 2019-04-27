@@ -27,6 +27,10 @@ to process the payment.
 
 <img align="center" alt="TurtlePay Payment Instructions" src="https://www.drupal.org/files/project-images/turtlepay-themed-payment-instructions.png">
 
+Included is also a submodule <code>Commerce TurtleCoin Currency on Checkout</code>, which uses <a href="https://www.drupal.org/project/commerce_currency_resolver">Commerce Currency Resolver</a> to change the order currency on checkout to TRTL if a Turtle Payment Gateway is used.
+
+You can enter the product prices in Euro or Dollar, an Exchange rate service for Commerce Currency Resolver is included which uses the <a href="https://min-api.cryptocompare.com/">CryptoCompare API</a> to calculate the TRTL price if necessary.
+
 ## Installation
 
 The gateway implemented with Wallet RPC API needs a running and connected
