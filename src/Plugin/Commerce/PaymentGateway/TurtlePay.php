@@ -200,9 +200,11 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
 
     // Generate a secret and unique string for the callback url.
     $secret = Crypt::randomBytesBase64(96);
+    $payment_amount = floatval($payment->getAmount()->getNumber()) * 100;
 
     $data = Json::encode([
-      'amount' => $payment->getAmount()->getNumber() * 100,
+      // TODO: PHP 7.1 does strange things with the numbers?
+      'amount' => intval($payment_amount),
       'address' => $this->getConfiguration()['turtlecoin_address_store'],
       'callback' => $this->getConfiguration()['turtlepay_callback_host'] . '/commerce_turtlecoin/api/v1/turtlepay/' . $secret . '/' . $payment->id(),
       'userDefined' => [

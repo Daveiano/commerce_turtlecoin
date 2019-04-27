@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\content_helper\Functional;
+namespace Drupal\Tests\commerce\Functional;
 
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;

@@ -10,6 +10,16 @@ use Drupal\Core\Controller\ControllerBase;
 class TurtleCoinBaseController extends ControllerBase {
 
   /**
+   * Gateways which should use TRTL currency.
+   */
+  const TURTLE_PAYMENT_GATEWAYS = [
+    'turtlepay_payment_gateway',
+    'turtlecoin_payment_gateway',
+  ];
+
+  const TURTLE_CURRENCY_CODE = 'XTR';
+
+  /**
    * Validate a given TurtleCoin address.
    *
    * @param string $turtlecoin_address
