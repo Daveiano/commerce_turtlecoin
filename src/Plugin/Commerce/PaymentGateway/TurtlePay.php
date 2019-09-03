@@ -38,6 +38,7 @@ use Drupal\Component\Utility\Crypt;
  *     "live" = "Live",
  *   },
  *   payment_type = "payment_turtle_pay",
+ *   requires_billing_information = FALSE,
  * )
  */
 class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
