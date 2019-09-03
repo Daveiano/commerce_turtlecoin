@@ -35,6 +35,7 @@ use Drupal\commerce_payment\Exception\InvalidResponseException;
  *     "live" = "Live",
  *   },
  *   payment_type = "payment_turtle_coin",
+ *   requires_billing_information = FALSE,
  * )
  */
 class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
