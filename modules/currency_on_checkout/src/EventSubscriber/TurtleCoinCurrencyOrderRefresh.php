@@ -1,8 +1,8 @@
 <?php
 
-namespace Drupal\turtlecoin_currency_on_checkout\EventSubscriber;
+namespace Drupal\commerce_turtlecoin_currency_on_checkout\EventSubscriber;
 
-use Drupal\turtlecoin_currency_on_checkout\CommerceTurtleCoinResolversRefreshTrait;
+use Drupal\commerce_turtlecoin_currency_on_checkout\CommerceTurtleCoinResolversRefreshTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;

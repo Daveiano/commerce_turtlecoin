@@ -1,7 +1,8 @@
 <?php
 
-namespace Drupal\turtlecoin_currency_on_checkout;
+namespace Drupal\commerce_turtlecoin_currency_on_checkout;
 
+use Drupal\commerce_exchanger\ExchangerCalculatorInterface;
 use Drupal\commerce_currency_resolver\CurrencyHelper;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderInterface;
@@ -14,7 +15,7 @@ use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
 /**
  * Class TurtleOrderProcessor.
  *
- * @package Drupal\commerce_turtlecoin
+ * @package Drupal\commerce_turtlecoin_currency_on_checkout
  */
 class TurtleOrderProcessor implements OrderProcessorInterface {
 
@@ -40,12 +41,20 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
   protected $routeMatch;
 
   /**
+   * Price exchanger service.
+   *
+   * @var \Drupal\commerce_exchanger\ExchangerCalculatorInterface
+   */
+  protected $priceExchanger;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, AccountInterface $account, RouteMatchInterface $route_match) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, AccountInterface $account, RouteMatchInterface $route_match, ExchangerCalculatorInterface $price_exchanger) {
     $this->orderStorage = $entity_type_manager->getStorage('commerce_order');
     $this->account = $account;
     $this->routeMatch = $route_match;
+    $this->priceExchanger = $price_exchanger;
   }
 
   /**
@@ -87,7 +96,7 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
             if (!$item->hasPurchasedEntity()) {
               $price = $item->getUnitPrice();
               // Auto calculate price.
-              $item->setUnitPrice(CurrencyHelper::priceConversion($price, TurtleCoinBaseController::TURTLE_CURRENCY_CODE));
+              $item->setUnitPrice($this->priceExchanger->priceConversion($price, TurtleCoinBaseController::TURTLE_CURRENCY_CODE));
             }
           }
 
@@ -146,7 +155,7 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
               // know if user is using multicurrency conditions or not,
               // convert price just in case if is different currency.
               if ($shipment->getAmount()->getCurrencyCode() !== $resolved_currency) {
-                $shipment->setAmount(CurrencyHelper::priceConversion($shipment->getAmount(), $resolved_currency));
+                $shipment->setAmount($this->priceExchanger->priceConversion($shipment->getAmount(), $resolved_currency));
               }
 
               $shipments[$key] = $shipment;

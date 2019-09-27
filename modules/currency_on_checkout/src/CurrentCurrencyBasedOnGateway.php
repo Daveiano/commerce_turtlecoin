@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\turtlecoin_currency_on_checkout;
+namespace Drupal\commerce_turtlecoin_currency_on_checkout;
 
 use Drupal\commerce_currency_resolver\CurrentCurrencyInterface;
 use Symfony\Component\HttpFoundation\RequestStack;

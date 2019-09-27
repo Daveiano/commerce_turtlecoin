@@ -1,13 +1,13 @@
 <?php
 
-namespace Drupal\turtlecoin_currency_on_checkout;
+namespace Drupal\commerce_turtlecoin_currency_on_checkout;
 
 use Drupal\commerce_order\Entity\OrderInterface;
 
 /**
  * Handle access where currency resolver can refresh order.
  *
- * @see Drupal\commerce_currency_resolver\CurrencyResolverResolversRefreshTrait
+ * @see \Drupal\commerce_currency_resolver\CurrencyResolverResolversRefreshTrait
  */
 trait CommerceTurtleCoinResolversRefreshTrait {
 
