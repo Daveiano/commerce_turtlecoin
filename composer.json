@@ -6,7 +6,7 @@
   "keywords": ["Drupal"],
   "license": "GPL-2.0+",
   "require": {
-    "drupal/commerce": "~2.0",
+    "drupal/commerce": "2.x-dev",
     "drupal/commerce_currency_resolver": "^1",
     "turtlecoin/turtlecoin-rpc-php": "^2.1"
   }
