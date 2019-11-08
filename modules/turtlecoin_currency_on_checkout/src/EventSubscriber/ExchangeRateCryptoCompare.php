@@ -37,8 +37,7 @@ class ExchangeRateCryptoCompare extends ExchangeRateEventSubscriberBase {
     $url = self::apiUrl() . '/price';
     $options = [
       'query' => [
-        // TODO: Fix for the provisional XTR currency code.
-        'tsyms' => str_replace('XTR', 'TRTL', implode(',', array_keys($enabled_currencies))),
+        'tsyms' => implode(',', array_keys($enabled_currencies)),
         'api_key' => self::apiKey(),
       ],
     ];
@@ -54,11 +53,6 @@ class ExchangeRateCryptoCompare extends ExchangeRateEventSubscriberBase {
       $data['base'] = $base_currency;
 
       foreach ($exchange_rates as $currency => $exchange_rate) {
-        // TODO: Fix for the provisional XTR currency code.
-        if ($currency === 'TRTL') {
-          $currency = 'XTR';
-        }
-
         $data['rates'][$currency] = $exchange_rate;
       }
     }

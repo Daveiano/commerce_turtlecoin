@@ -17,7 +17,7 @@ class TurtleCoinBaseController extends ControllerBase {
     'turtlecoin_payment_gateway',
   ];
 
-  const TURTLE_CURRENCY_CODE = 'XTR';
+  const TURTLE_CURRENCY_CODE = 'TRTL';
 
   /**
    * Validate a given TurtleCoin address.

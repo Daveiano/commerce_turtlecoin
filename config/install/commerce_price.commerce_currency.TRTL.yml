@@ -1,8 +1,6 @@
-# TODO: Make this as clean as possible.
-# @see: https://www.drupal.org/project/commerce/issues/2952929
-currencyCode: XTR
+currencyCode: TRTL
 name: TurtleCoin
-numericCode: '998'
+numericCode: '000'
 symbol: TRTL
 fractionDigits: 2
 dependencies:
