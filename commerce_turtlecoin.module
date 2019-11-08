@@ -3,6 +3,10 @@
 /**
  * @file
  * Includes various helper for the TurtleCoin payment gateway.
+ * $currencyStorage = \Drupal::entityTypeManager()->getStorage('commerce_currency');
+ *
+ * //$XTR = $currencyStorage->load('TRTL')->delete();
+ * $TRTL = $currencyStorage->create(['currencyCode' => 'TRTL', 'name' => 'TurtleCoin', 'numericCode' => '000', 'symbol' => 'TRTL', 'fractionDigits' => '2'])->save();
  */
 
 use Drupal\Core\Queue\SuspendQueueException;
