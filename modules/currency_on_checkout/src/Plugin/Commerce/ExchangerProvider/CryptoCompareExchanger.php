@@ -62,6 +62,7 @@ class CryptoCompareExchanger extends ExchangerProviderRemoteBase {
     else {
       // TODO: Fix for the provisional XTR currency code.
       $options['query']['fsyms'] = str_replace('XTR', 'TRTL', implode(',', array_keys($currencies)));
+      $base_currency = array_keys($currencies)[0];
     }
 
     $response = $this->apiClient($options);
