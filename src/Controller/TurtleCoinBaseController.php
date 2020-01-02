@@ -6,6 +6,8 @@ use Drupal\Core\Controller\ControllerBase;
 
 /**
  * Defines TurtleCoinBaseController class.
+ *
+ * @todo Remove controller, add as service.
  */
 class TurtleCoinBaseController extends ControllerBase {
 

@@ -6,14 +6,15 @@ use Drupal\commerce\Context;
 use Drupal\commerce\PurchasableEntityInterface;
 use Drupal\commerce_currency_resolver\CommerceCurrencyResolversRefreshTrait;
 use Drupal\commerce_price\Resolver\PriceResolverInterface;
-use Drupal\commerce_currency_resolver\CurrencyHelper;
 use Drupal\commerce_currency_resolver\CurrentCurrencyInterface;
 use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\commerce_exchanger\ExchangerCalculatorInterface;
 
 /**
  * Returns a price and currency depending of language or country.
  *
- * @see Drupal\commerce_currency_resolver\Resolver\CommerceCurrencyResolver.
+ * @see \Drupal\commerce_currency_resolver\Resolver\CommerceCurrencyResolver.
  */
 class CommerceTurtleCoinResolver implements PriceResolverInterface {
 
@@ -27,13 +28,33 @@ class CommerceTurtleCoinResolver implements PriceResolverInterface {
   protected $currentCurrency;
 
   /**
+   * Config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
+   * Price Calculator.
+   *
+   * @var \Drupal\commerce_exchanger\ExchangerCalculatorInterface
+   */
+  protected $calculator;
+
+  /**
    * Constructs a new CommerceCurrencyResolver object.
    *
    * @param \Drupal\commerce_currency_resolver\CurrentCurrencyInterface $current_currency
    *   The currency manager.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   Config factory.
+   * @param \Drupal\commerce_exchanger\ExchangerCalculatorInterface $calculator
+   *   Price Calculator.
    */
-  public function __construct(CurrentCurrencyInterface $current_currency) {
+  public function __construct(CurrentCurrencyInterface $current_currency, ConfigFactoryInterface $config_factory, ExchangerCalculatorInterface $calculator) {
     $this->currentCurrency = $current_currency;
+    $this->configFactory = $config_factory;
+    $this->calculator = $calculator;
   }
 
   /**
@@ -58,11 +79,11 @@ class CommerceTurtleCoinResolver implements PriceResolverInterface {
       // If we have price.
       if ($price && $price->getCurrencyCode() !== TurtleCoinBaseController::TURTLE_CURRENCY_CODE) {
         // Get how price should be calculated.
-        $currency_source = $this->getCurrencySource();
+        $currency_source = $this->configFactory->get('commerce_currency_resolver.settings')->get('currency_source');
 
         // Auto-calculate price by default. Fallback for all cases regardless
         // of chosen currency source mode.
-        $resolved_price = CurrencyHelper::priceConversion($price, TurtleCoinBaseController::TURTLE_CURRENCY_CODE);
+        $resolved_price = $this->calculator->priceConversion($price, TurtleCoinBaseController::TURTLE_CURRENCY_CODE);
 
         // Specific cases for field and combo. Even we had autocalculated
         // price, in combo mode we could have field with price.

@@ -63,7 +63,7 @@ class TurtleCoinCurrencyOrderRefresh implements EventSubscriberInterface {
    */
   public static function getSubscribedEvents() {
     $events = [
-      'commerce_order.commerce_order.update' => 'checkCurrency',
+      'commerce_order.commerce_order.presave' => 'checkCurrency',
     ];
     return $events;
   }
@@ -94,11 +94,13 @@ class TurtleCoinCurrencyOrderRefresh implements EventSubscriberInterface {
       if (($order_currency !== $turtlecoin_currency_code) && in_array($order_payment, $turtlecoin_payment_gateways) && $this->shouldCurrencyRefresh($order)) {
         // Check if we can refresh order.
         $this->orderRefresh->refresh($order);
-        $order->save();
       }
-      elseif ($this->turtleCoinSetSkip($order) && !in_array($order_payment, $turtlecoin_payment_gateways) && ($order_currency === $turtlecoin_currency_code) && $this->shouldCurrencyRefresh($order)) {
+      elseif ($this->turtleCoinSetSkip($order) &&
+        !in_array($order_payment, $turtlecoin_payment_gateways) &&
+        ($order_currency === $turtlecoin_currency_code) &&
+        $this->shouldCurrencyRefresh($order)
+      ) {
         $this->orderRefresh->refresh($order);
-        $order->save();
       }
     }
   }

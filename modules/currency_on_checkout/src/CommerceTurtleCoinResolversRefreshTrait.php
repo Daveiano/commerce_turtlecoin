@@ -74,6 +74,7 @@ trait CommerceTurtleCoinResolversRefreshTrait {
    */
   public function shouldCurrencyRefresh(OrderInterface $order) {
 
+    // @todo Remove this?
     $currency_resolver_skip = $order->getData('currency_resolver_skip');
     $commerce_turtlecoin_skipped = $order->getData('commerce_turtlecoin_skipped');
 
