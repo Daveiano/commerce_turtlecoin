@@ -7,3 +7,4 @@ dependencies:
   - commerce_turtlecoin
   - commerce_currency_resolver
   - commerce_exchanger
+  - commerce_exchanger_cryptocompare
