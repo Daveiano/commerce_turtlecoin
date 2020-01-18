@@ -61,7 +61,14 @@ class CurrentCurrencyBasedOnGateway implements CurrentCurrencyInterface {
 
     if (!$this->currency->contains($request)) {
       $currency = NULL;
-      // @todo dependency injection.
+      // @todo Use dependency injection. But: if we inject the current_store
+      // and the cart provider, following message appears:
+      // Circular reference detected for service "commerce_order.order_refresh",
+      // path: "commerce_order.order_refresh ->
+      // commerce_price.chain_price_resolver ->
+      // commerce_turtlecoin_currency_on_checkout.commerce_turtlecoin_price_resolver ->
+      // commerce_turtlecoin_currency_on_checkout.current_currency_based_on_gateway ->
+      // commerce_cart.cart_provider".
       /* @var \Drupal\commerce_store\CurrentStoreInterface $cs */
       $cs = \Drupal::service('commerce_store.current_store');
       /* @var \Drupal\commerce_cart\CartProviderInterface $cpi */

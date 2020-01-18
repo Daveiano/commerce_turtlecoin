@@ -91,7 +91,10 @@ class TurtleCoinCurrencyOrderRefresh implements EventSubscriberInterface {
       // Refresh order if they are different. We need then alter total price.
       // This will trigger order processor which will handle
       // correction of total order price and currency.
-      if (($order_currency !== $turtlecoin_currency_code) && in_array($order_payment, $turtlecoin_payment_gateways) && $this->shouldCurrencyRefresh($order)) {
+      if (($order_currency !== $turtlecoin_currency_code) &&
+        in_array($order_payment, $turtlecoin_payment_gateways) &&
+        $this->shouldCurrencyRefresh($order)
+      ) {
         // Check if we can refresh order.
         $this->orderRefresh->refresh($order);
       }

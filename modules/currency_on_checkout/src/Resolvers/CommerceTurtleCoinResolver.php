@@ -4,7 +4,6 @@ namespace Drupal\commerce_turtlecoin_currency_on_checkout\Resolvers;
 
 use Drupal\commerce\Context;
 use Drupal\commerce\PurchasableEntityInterface;
-use Drupal\commerce_currency_resolver\CommerceCurrencyResolversRefreshTrait;
 use Drupal\commerce_price\Resolver\PriceResolverInterface;
 use Drupal\commerce_currency_resolver\CurrentCurrencyInterface;
 use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
@@ -17,8 +16,6 @@ use Drupal\commerce_exchanger\ExchangerCalculatorInterface;
  * @see \Drupal\commerce_currency_resolver\Resolver\CommerceCurrencyResolver.
  */
 class CommerceTurtleCoinResolver implements PriceResolverInterface {
-
-  use CommerceCurrencyResolversRefreshTrait;
 
   /**
    * The current currency.

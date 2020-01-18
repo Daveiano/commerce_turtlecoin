@@ -108,9 +108,6 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
 
             $adjustment_currency = $adjustment->getAmount()->getCurrencyCode();
 
-            // We should only dealt with locked adjustment.
-            // Any non locked have their order processor implementation
-            // probably.
             if ($adjustment_currency !== TurtleCoinBaseController::TURTLE_CURRENCY_CODE) {
               $reset_adjustments = TRUE;
               $adjustment_amount = $adjustment->getAmount();
@@ -136,21 +133,17 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
 
           // Set order data so currency_resolver knows it should skip this
           // order.
-          // @todo Remove this?
           $order->setData('currency_resolver_skip', TRUE);
           $order->setData('commerce_turtlecoin_skipped', TRUE);
-
           // Get new total price.
           $order->recalculateTotalPrice();
 
           // Refresh order on load. Shipping fix. Probably all other potential
           // unlocked adjustments which are not set correctly.
-          $order->setRefreshState(Order::REFRESH_ON_LOAD);
+          //$order->setRefreshState(Order::REFRESH_ON_LOAD);
         }
       }
-      // @todo Remove this?
       elseif ($order->getData('currency_resolver_skip') && $order->getData('commerce_turtlecoin_skipped') && !in_array($payment_gateway_plugin_id, TurtleCoinBaseController::TURTLE_PAYMENT_GATEWAYS)) {
-        // @todo Remove this?
         $order->setData('currency_resolver_skip', FALSE);
         $order->setData('commerce_turtlecoin_skipped', FALSE);
         $order->setRefreshState(Order::REFRESH_ON_LOAD);

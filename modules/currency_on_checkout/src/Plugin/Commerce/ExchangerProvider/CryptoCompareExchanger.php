@@ -2,15 +2,8 @@
 
 namespace Drupal\commerce_turtlecoin_currency_on_checkout\Plugin\Commerce\ExchangerProvider;
 
-use Drupal\commerce_currency_resolver\CurrencyHelper;
 use Drupal\commerce_exchanger\Plugin\Commerce\ExchangerProvider\ExchangerProviderRemoteBase;
 use Drupal\Component\Serialization\Json;
-use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Http\ClientFactory;
-use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides Crypto Compare Rates.

@@ -204,8 +204,11 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
 
     $data = Json::encode([
       // TODO: PHP 7.1 does strange things with the numbers?
+      // TODO: The privateViewKey is a new requirement?
+      // @see https://docs.turtlepay.io/api/
       'amount' => intval($payment_amount),
       'address' => $this->getConfiguration()['turtlecoin_address_store'],
+      //'privateViewKey' => '418626af5c4941a6860d5e8bff2ec4a5bfb123323f194c4718bfe6d45903aa08',
       'callback' => $this->getConfiguration()['turtlepay_callback_host'] . '/commerce_turtlecoin/api/v1/turtlepay/' . $secret . '/' . $payment->id(),
       'userDefined' => [
         'debug' => $this->getConfiguration()['mode'] === 'debug',

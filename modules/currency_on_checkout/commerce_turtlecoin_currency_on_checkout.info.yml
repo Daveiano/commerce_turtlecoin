@@ -4,6 +4,6 @@ description: 'Resolves the order currency to TRTL on checkout if a Turtle Paymen
 package: Commerce (contrib)
 core: 8.x
 dependencies:
-  - commerce:commerce_turtlecoin
+  - commerce_turtlecoin
   - commerce_currency_resolver
   - commerce_exchanger

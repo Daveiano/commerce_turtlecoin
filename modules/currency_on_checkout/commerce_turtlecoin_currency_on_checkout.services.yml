@@ -20,9 +20,3 @@ services:
     arguments: ['@entity_type.manager', '@commerce_order.order_refresh','@current_user', '@current_route_match']
     tags:
       - { name: event_subscriber }
-
-  cache_context.turtlecoin:
-    class: Drupal\commerce_turtlecoin_currency_on_checkout\Cache\Context\TurtleCoinCacheContext
-    arguments: ['@commerce_turtlecoin_currency_on_checkout.current_currency_based_on_gateway']
-    tags:
-      - { name: cache.context}
