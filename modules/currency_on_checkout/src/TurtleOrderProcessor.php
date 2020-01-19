@@ -7,10 +7,10 @@ use Drupal\commerce_order\Adjustment;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\OrderProcessorInterface;
+use Drupal\commerce_turtlecoin\TurtleCoinService;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
 
 /**
  * Class TurtleOrderProcessor.
@@ -48,13 +48,21 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
   protected $priceExchanger;
 
   /**
+   * The Turtle Coin service.
+   *
+   * @var \Drupal\commerce_turtlecoin\TurtleCoinService
+   */
+  protected $turtleCoinService;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, AccountInterface $account, RouteMatchInterface $route_match, ExchangerCalculatorInterface $price_exchanger) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, AccountInterface $account, RouteMatchInterface $route_match, ExchangerCalculatorInterface $price_exchanger, TurtleCoinService $turtle_coin_service) {
     $this->orderStorage = $entity_type_manager->getStorage('commerce_order');
     $this->account = $account;
     $this->routeMatch = $route_match;
     $this->priceExchanger = $price_exchanger;
+    $this->turtleCoinService = $turtle_coin_service;
   }
 
   /**
@@ -64,10 +72,10 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
     if ($order && !$order->get('payment_gateway')->isEmpty()) {
       $payment_gateway_plugin_id = $order->payment_gateway->entity->getPluginId();
 
-      if (in_array($payment_gateway_plugin_id, TurtleCoinBaseController::TURTLE_PAYMENT_GATEWAYS)) {
+      if (in_array($payment_gateway_plugin_id, $this->turtleCoinService::TURTLE_PAYMENT_GATEWAYS)) {
         $total = $order->getTotalPrice();
 
-        if ($total && $total->getCurrencyCode() !== TurtleCoinBaseController::TURTLE_CURRENCY_CODE) {
+        if ($total && $total->getCurrencyCode() !== $this->turtleCoinService::TURTLE_CURRENCY_CODE_PSEUDO) {
 
           // Get order items.
           $items = $order->getItems();
@@ -78,7 +86,7 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
             // @var \Drupal\commerce_order\Entity\OrderItem $item
             $price = $item->getUnitPrice();
             // Auto calculate price.
-            $item->setUnitPrice($this->priceExchanger->priceConversion($price, TurtleCoinBaseController::TURTLE_CURRENCY_CODE));
+            $item->setUnitPrice($this->priceExchanger->priceConversion($price, $this->turtleCoinService::TURTLE_CURRENCY_CODE_PSEUDO));
           }
 
           $order = $order->set('order_items', []);
@@ -91,7 +99,7 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
               // Get order shipments.
               $shipments = $order->shipments->referencedEntities();
 
-              $update_shipments = $this->processShipments($shipments, TurtleCoinBaseController::TURTLE_CURRENCY_CODE);
+              $update_shipments = $this->processShipments($shipments, $this->turtleCoinService::TURTLE_CURRENCY_CODE_PSEUDO);
 
               if ($update_shipments) {
                 $order = $order->set('shipments', $shipments);
@@ -108,12 +116,12 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
 
             $adjustment_currency = $adjustment->getAmount()->getCurrencyCode();
 
-            if ($adjustment_currency !== TurtleCoinBaseController::TURTLE_CURRENCY_CODE) {
+            if ($adjustment_currency !== $this->turtleCoinService::TURTLE_CURRENCY_CODE_PSEUDO) {
               $reset_adjustments = TRUE;
               $adjustment_amount = $adjustment->getAmount();
               $values = $adjustment->toArray();
               // Auto calculate price.
-              $values['amount'] = $this->priceExchanger->priceConversion($adjustment_amount, TurtleCoinBaseController::TURTLE_CURRENCY_CODE);
+              $values['amount'] = $this->priceExchanger->priceConversion($adjustment_amount, $this->turtleCoinService::TURTLE_CURRENCY_CODE_PSEUDO);
               $new_adjustment = new Adjustment($values);
               $new_adjustments[] = $new_adjustment;
             }
@@ -143,7 +151,7 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
           //$order->setRefreshState(Order::REFRESH_ON_LOAD);
         }
       }
-      elseif ($order->getData('currency_resolver_skip') && $order->getData('commerce_turtlecoin_skipped') && !in_array($payment_gateway_plugin_id, TurtleCoinBaseController::TURTLE_PAYMENT_GATEWAYS)) {
+      elseif ($order->getData('currency_resolver_skip') && $order->getData('commerce_turtlecoin_skipped') && !in_array($payment_gateway_plugin_id, $this->turtleCoinService::TURTLE_PAYMENT_GATEWAYS)) {
         $order->setData('currency_resolver_skip', FALSE);
         $order->setData('commerce_turtlecoin_skipped', FALSE);
         $order->setRefreshState(Order::REFRESH_ON_LOAD);
@@ -185,7 +193,7 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
               // know if user is using multicurrency conditions or not,
               // convert price just in case if is different currency.
               if ($shipment->getAmount()->getCurrencyCode() !== $resolved_currency) {
-                $shipment->setAmount($this->priceExchanger->priceConversion($shipment->getAmount(), TurtleCoinBaseController::TURTLE_CURRENCY_CODE));
+                $shipment->setAmount($this->priceExchanger->priceConversion($shipment->getAmount(), $this->turtleCoinService::TURTLE_CURRENCY_CODE_PSEUDO));
               }
 
               $shipments[$key] = $shipment;
@@ -194,7 +202,7 @@ class TurtleOrderProcessor implements OrderProcessorInterface {
 
             // We haven't found anything, automatically convert price.
             else {
-              $shipment->setAmount($this->priceExchanger->priceConversion($shipment->getAmount(), TurtleCoinBaseController::TURTLE_CURRENCY_CODE));
+              $shipment->setAmount($this->priceExchanger->priceConversion($shipment->getAmount(), $this->turtleCoinService::TURTLE_CURRENCY_CODE_PSEUDO));
             }
           }
         }

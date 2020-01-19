@@ -14,7 +14,7 @@
 #}
 
 <div class="payment-instructions-turtlecoin turtlepay">
-  <p>Please transfer the amount of <span class="payment-amount">{{ payment_amount }}</span> to <span class="payment-address">{{ turtle_address }}</span></p>
+  <p>Please transfer the amount of <span class="payment-amount">{{ payment_amount|replace({'TRT': 'TRTL'}) }}</span> to <span class="payment-address">{{ turtle_address }}</span></p>
   <p class="payment-warning">Warning: This address will only be active for about {{ validity_time_blocks }} Blocks ({{ validity_time }}h)</p>
 
   <div class="payment-logo-qr">

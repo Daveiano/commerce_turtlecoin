@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_turtlecoin_currency_on_checkout\EventSubscriber;
 
+use Drupal\commerce_turtlecoin\TurtleCoinService;
 use Drupal\commerce_turtlecoin_currency_on_checkout\CommerceTurtleCoinResolversRefreshTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -9,7 +10,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal\commerce_order\Event\OrderEvent;
 use Drupal\commerce_order\OrderRefreshInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
 
 /**
  * Checking for mismatch in currencies on order.
@@ -49,13 +49,21 @@ class TurtleCoinCurrencyOrderRefresh implements EventSubscriberInterface {
   protected $routeMatch;
 
   /**
+   * The Turtle Coin service.
+   *
+   * @var \Drupal\commerce_turtlecoin\TurtleCoinService
+   */
+  protected $turtleCoinService;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, OrderRefreshInterface $order_refresh, AccountInterface $account, RouteMatchInterface $route_match) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, OrderRefreshInterface $order_refresh, AccountInterface $account, RouteMatchInterface $route_match, TurtleCoinService $turtle_coin_service) {
     $this->orderStorage = $entity_type_manager->getStorage('commerce_order');
     $this->account = $account;
     $this->routeMatch = $route_match;
     $this->orderRefresh = $order_refresh;
+    $this->turtleCoinService = $turtle_coin_service;
   }
 
   /**
@@ -84,8 +92,8 @@ class TurtleCoinCurrencyOrderRefresh implements EventSubscriberInterface {
     if ($order_total && !$order->get('payment_gateway')->isEmpty()) {
       $order_currency = $order_total->getCurrencyCode();
       $order_payment = $order->payment_gateway->entity->getPluginId();
-      $turtlecoin_payment_gateways = TurtleCoinBaseController::TURTLE_PAYMENT_GATEWAYS;
-      $turtlecoin_currency_code = TurtleCoinBaseController::TURTLE_CURRENCY_CODE;
+      $turtlecoin_payment_gateways = $this->turtleCoinService::TURTLE_PAYMENT_GATEWAYS;
+      $turtlecoin_currency_code = $this->turtleCoinService::TURTLE_CURRENCY_CODE_PSEUDO;
 
       // Compare order total and main resolved currency.
       // Refresh order if they are different. We need then alter total price.

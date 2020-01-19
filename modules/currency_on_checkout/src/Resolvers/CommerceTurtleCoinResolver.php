@@ -6,7 +6,7 @@ use Drupal\commerce\Context;
 use Drupal\commerce\PurchasableEntityInterface;
 use Drupal\commerce_price\Resolver\PriceResolverInterface;
 use Drupal\commerce_currency_resolver\CurrentCurrencyInterface;
-use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
+use Drupal\commerce_turtlecoin\TurtleCoinService;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\commerce_exchanger\ExchangerCalculatorInterface;
 
@@ -39,6 +39,13 @@ class CommerceTurtleCoinResolver implements PriceResolverInterface {
   protected $calculator;
 
   /**
+   * The Turtle Coin service.
+   *
+   * @var \Drupal\commerce_turtlecoin\TurtleCoinService
+   */
+  protected $turtleCoinService;
+
+  /**
    * Constructs a new CommerceCurrencyResolver object.
    *
    * @param \Drupal\commerce_currency_resolver\CurrentCurrencyInterface $current_currency
@@ -47,11 +54,14 @@ class CommerceTurtleCoinResolver implements PriceResolverInterface {
    *   Config factory.
    * @param \Drupal\commerce_exchanger\ExchangerCalculatorInterface $calculator
    *   Price Calculator.
+   * @param \Drupal\commerce_turtlecoin\TurtleCoinService $turtle_coin_service
+   *   Turtle Coin service.
    */
-  public function __construct(CurrentCurrencyInterface $current_currency, ConfigFactoryInterface $config_factory, ExchangerCalculatorInterface $calculator) {
+  public function __construct(CurrentCurrencyInterface $current_currency, ConfigFactoryInterface $config_factory, ExchangerCalculatorInterface $calculator, TurtleCoinService $turtle_coin_service) {
     $this->currentCurrency = $current_currency;
     $this->configFactory = $config_factory;
     $this->calculator = $calculator;
+    $this->turtleCoinService = $turtle_coin_service;
   }
 
   /**
@@ -61,7 +71,7 @@ class CommerceTurtleCoinResolver implements PriceResolverInterface {
     // Default price.
     $price = NULL;
 
-    if ($this->currentCurrency->getCurrency() === TurtleCoinBaseController::TURTLE_CURRENCY_CODE) {
+    if ($this->currentCurrency->getCurrency() === $this->turtleCoinService::TURTLE_CURRENCY_CODE_PSEUDO) {
       // Get field from context.
       $field_name = $context->getData('field_name', 'price');
 
@@ -74,13 +84,13 @@ class CommerceTurtleCoinResolver implements PriceResolverInterface {
       }
 
       // If we have price.
-      if ($price && $price->getCurrencyCode() !== TurtleCoinBaseController::TURTLE_CURRENCY_CODE) {
+      if ($price && $price->getCurrencyCode() !== $this->turtleCoinService::TURTLE_CURRENCY_CODE_PSEUDO) {
         // Get how price should be calculated.
         $currency_source = $this->configFactory->get('commerce_currency_resolver.settings')->get('currency_source');
 
         // Auto-calculate price by default. Fallback for all cases regardless
         // of chosen currency source mode.
-        $resolved_price = $this->calculator->priceConversion($price, TurtleCoinBaseController::TURTLE_CURRENCY_CODE);
+        $resolved_price = $this->calculator->priceConversion($price, $this->turtleCoinService::TURTLE_CURRENCY_CODE_PSEUDO);
 
         // Specific cases for field and combo. Even we had autocalculated
         // price, in combo mode we could have field with price.
@@ -93,7 +103,7 @@ class CommerceTurtleCoinResolver implements PriceResolverInterface {
             $field_name = 'field_price';
           }
 
-          $resolved_field = $field_name . '_' . strtolower(TurtleCoinBaseController::TURTLE_CURRENCY_CODE);
+          $resolved_field = $field_name . '_' . strtolower($this->turtleCoinService::TURTLE_CURRENCY_CODE_PSEUDO);
 
           // Check if we have field.
           if ($entity->hasField($resolved_field) && !$entity->get($resolved_field)->isEmpty()) {

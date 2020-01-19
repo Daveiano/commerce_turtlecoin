@@ -1,15 +1,11 @@
 <?php
 
-namespace Drupal\commerce_turtlecoin\Controller;
-
-use Drupal\Core\Controller\ControllerBase;
+namespace Drupal\commerce_turtlecoin;
 
 /**
- * Defines TurtleCoinBaseController class.
- *
- * @todo Remove controller, add as service.
+ * Class TurtleCoinService.
  */
-class TurtleCoinBaseController extends ControllerBase {
+class TurtleCoinService {
 
   /**
    * Gateways which should use TRTL currency.
@@ -18,6 +14,8 @@ class TurtleCoinBaseController extends ControllerBase {
     'turtlepay_payment_gateway',
     'turtlecoin_payment_gateway',
   ];
+
+  const TURTLE_CURRENCY_CODE_PSEUDO = 'TRT';
 
   const TURTLE_CURRENCY_CODE = 'TRTL';
 

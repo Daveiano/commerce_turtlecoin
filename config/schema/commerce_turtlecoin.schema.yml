@@ -23,6 +23,9 @@ commerce_payment.commerce_payment_gateway.plugin.turtlepay_payment_gateway:
     turtlecoin_address_store:
       type: string
       label: 'TurtleCoin address which will receive the payments.'
+    turtlecoin_private_view_key:
+      type: string
+      label: 'The Private View Key of the wallet address above (view only access).'
     turtlepay_callback_host:
       type: string
       label: 'The host to use for the incoming TurtlePay status updates.'

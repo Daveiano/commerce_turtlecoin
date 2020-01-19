@@ -3,9 +3,9 @@
 namespace Drupal\commerce_turtlecoin_currency_on_checkout;
 
 use Drupal\commerce_currency_resolver\CurrentCurrencyInterface;
+use Drupal\commerce_turtlecoin\TurtleCoinService;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
 use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
@@ -44,13 +44,21 @@ class CurrentCurrencyBasedOnGateway implements CurrentCurrencyInterface {
   protected $currency;
 
   /**
+   * The Turtle Coin service.
+   *
+   * @var \Drupal\commerce_turtlecoin\TurtleCoinService
+   */
+  protected $turtleCoinService;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(RequestStack $request_stack, AccountProxyInterface $current_user, RouteMatchInterface $route_match) {
+  public function __construct(RequestStack $request_stack, AccountProxyInterface $current_user, RouteMatchInterface $route_match, TurtleCoinService $turtle_coin_service) {
     $this->requestStack = $request_stack;
     $this->currentUser = $current_user;
     $this->routeMatch = $route_match;
     $this->currency = new \SplObjectStorage();
+    $this->turtleCoinService = $turtle_coin_service;
   }
 
   /**
@@ -77,11 +85,11 @@ class CurrentCurrencyBasedOnGateway implements CurrentCurrencyInterface {
 
       $product = $this->routeMatch->getParameter('commerce_product');
 
-      if ($order && $product && !$order->get('payment_gateway')->isEmpty() && $order->getTotalPrice()->getCurrencyCode() === TurtleCoinBaseController::TURTLE_CURRENCY_CODE) {
+      if ($order && $product && !$order->get('payment_gateway')->isEmpty() && $order->getTotalPrice()->getCurrencyCode() === $this->turtleCoinService::TURTLE_CURRENCY_CODE_PSEUDO) {
         $payment_gateway_plugin_id = $order->payment_gateway->entity->getPluginId();
 
-        if (in_array($payment_gateway_plugin_id, TurtleCoinBaseController::TURTLE_PAYMENT_GATEWAYS)) {
-          $currency = TurtleCoinBaseController::TURTLE_CURRENCY_CODE;
+        if (in_array($payment_gateway_plugin_id, $this->turtleCoinService::TURTLE_PAYMENT_GATEWAYS)) {
+          $currency = $this->turtleCoinService::TURTLE_CURRENCY_CODE_PSEUDO;
           $this->currency[$request] = $currency;
 
           return $currency;

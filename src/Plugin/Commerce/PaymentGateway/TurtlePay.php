@@ -5,13 +5,13 @@ namespace Drupal\commerce_turtlecoin\Plugin\Commerce\PaymentGateway;
 use Drupal\commerce_payment\PaymentMethodTypeManager;
 use Drupal\commerce_payment\PaymentTypeManager;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\PaymentGatewayBase;
+use Drupal\commerce_turtlecoin\TurtleCoinService;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\commerce_payment\Entity\PaymentInterface;
 use GuzzleHttp\ClientInterface;
 use Drupal\commerce_price\Price;
-use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\commerce_payment\Exception\PaymentGatewayException;
 use GuzzleHttp\Exception\RequestException;
@@ -51,13 +51,11 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
   protected $httpClient;
 
   /**
-   * {@inheritdoc}
+   * The Turtle Coin service.
+   *
+   * @var \Drupal\commerce_turtlecoin\TurtleCoinService
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time, ClientInterface $http_client) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager, $time);
-
-    $this->httpClient = $http_client;
-  }
+  protected $turtleCoinService;
 
   /**
    * {@inheritdoc}
@@ -71,8 +69,19 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
       $container->get('plugin.manager.commerce_payment_type'),
       $container->get('plugin.manager.commerce_payment_method_type'),
       $container->get('datetime.time'),
-      $container->get('http_client')
+      $container->get('http_client'),
+      $container->get('commerce_turtlecoin.turtle_coin_service')
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time, ClientInterface $http_client, TurtleCoinService $turtle_coin_service) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager, $time);
+
+    $this->httpClient = $http_client;
+    $this->turtleCoinService = $turtle_coin_service;
   }
 
   /**
@@ -81,6 +90,7 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
   public function defaultConfiguration() {
     return [
       'turtlecoin_address_store' => '',
+      'turtlecoin_private_view_key' => '',
       'turtlepay_callback_host' => 'https://yourdomain.com',
     ] + parent::defaultConfiguration();
   }
@@ -99,6 +109,14 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
       '#required' => TRUE,
     ];
 
+    $form['turtlecoin_private_view_key'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('TurtleCoin private View Key'),
+      '#description' => $this->t('The Private View Key of the wallet address above (view only access).'),
+      '#default_value' => $this->configuration['turtlecoin_private_view_key'],
+      '#required' => TRUE,
+    ];
+
     $form['turtlepay_callback_host'] = [
       '#type' => 'textfield',
       '#title' => $this->t('TurtlePay Callback Host'),
@@ -112,6 +130,8 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @todo Validate turtlecoin_private_view_key.
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::validateConfigurationForm($form, $form_state);
@@ -119,7 +139,7 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
     if (!$form_state->getErrors()) {
       $values = $form_state->getValue($form['#parents']);
 
-      if (!TurtleCoinBaseController::validate($values['turtlecoin_address_store'])) {
+      if (!$this->turtleCoinService->validate($values['turtlecoin_address_store'])) {
         $form_state->setError($form['turtlecoin_address_store'], t('You have entered an invalid TurtleCoin Address.'));
       }
 
@@ -137,6 +157,7 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
 
     $values = $form_state->getValue($form['#parents']);
     $this->configuration['turtlecoin_address_store'] = $values['turtlecoin_address_store'];
+    $this->configuration['turtlecoin_private_view_key'] = $values['turtlecoin_private_view_key'];
     // Remove ending slash from host input.
     $this->configuration['turtlepay_callback_host'] = rtrim($values['turtlepay_callback_host'], '/');
   }
@@ -209,7 +230,7 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
       // @see https://docs.turtlepay.io/api/
       'amount' => intval($payment_amount),
       'address' => $this->getConfiguration()['turtlecoin_address_store'],
-      //'privateViewKey' => '418626af5c4941a6860d5e8bff2ec4a5bfb123323f194c4718bfe6d45903aa08',
+      'privateViewKey' => $this->getConfiguration()['turtlecoin_private_view_key'],
       'callback' => $this->getConfiguration()['turtlepay_callback_host'] . '/commerce_turtlecoin/api/v1/turtlepay/' . $secret . '/' . $payment->id(),
       'userDefined' => [
         'debug' => $this->getConfiguration()['mode'] === 'debug',

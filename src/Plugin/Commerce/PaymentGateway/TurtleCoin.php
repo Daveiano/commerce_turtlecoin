@@ -10,8 +10,9 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\commerce_payment\Entity\PaymentInterface;
 use Drupal\commerce_price\Price;
-use Drupal\commerce_turtlecoin\Controller\TurtleCoinBaseController;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use TurtleCoin\TurtleService;
+use Drupal\commerce_turtlecoin\TurtleCoinService;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ConnectException;
 use Drupal\commerce_payment\Exception\InvalidResponseException;
@@ -40,12 +41,40 @@ use Drupal\commerce_payment\Exception\InvalidResponseException;
  */
 class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
 
+  /**
+   * The Turtle service.
+   *
+   * @var \TurtleCoin\TurtleService
+   */
   protected $turtleService;
+
+  /**
+   * The Turtle Coin service.
+   *
+   * @var \Drupal\commerce_turtlecoin\TurtleCoinService
+   */
+  protected $turtleCoinService;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('entity_type.manager'),
+      $container->get('plugin.manager.commerce_payment_type'),
+      $container->get('plugin.manager.commerce_payment_method_type'),
+      $container->get('datetime.time'),
+      $container->get('commerce_turtlecoin.turtle_coin_service')
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time, TurtleCoinService $turtle_coin_service) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager, $time);
 
     $config = [
@@ -55,6 +84,7 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
     ];
 
     $this->turtleService = new TurtleService($config);
+    $this->turtleCoinService = $turtle_coin_service;
   }
 
   /**
@@ -150,7 +180,7 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
     if (!$form_state->getErrors()) {
       $values = $form_state->getValue($form['#parents']);
 
-      if (!TurtleCoinBaseController::validate($values['turtlecoin_address_store'])) {
+      if (!$this->turtleCoinService->validate($values['turtlecoin_address_store'])) {
         $form_state->setError($form['turtlecoin_address_store'], t('You have entered an invalid TurtleCoin Address.'));
       }
     }
@@ -224,7 +254,7 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
     // Create an integrated address for better transaction mapping via
     // integrated payment id.
     try {
-      $turtlecoin_payment_id = TurtleCoinBaseController::createPaymentId();
+      $turtlecoin_payment_id = $this->turtleCoinService->createPaymentId();
 
       $integrated_address = $this->turtleService->createIntegratedAddress(
         $this->getConfiguration()['turtlecoin_address_store'],
