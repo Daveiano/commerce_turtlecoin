@@ -1,0 +1,4 @@
+services:
+  commerce_turtlecoin.turtle_coin_service:
+    class: Drupal\commerce_turtlecoin\TurtleCoinService
+    arguments: []
