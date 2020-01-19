@@ -5,6 +5,14 @@
   "homepage": "https://www.drupal.org/project/commerce_turtlecoin",
   "keywords": ["Drupal"],
   "license": "GPL-2.0+",
+  "authors": [{
+    "name": "David Bätge",
+    "homepage": "https://www.drupal.org/u/daveiano"
+  }],
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/commerce_turtlecoin",
+    "source": "https://git.drupalcode.org/project/commerce_turtlecoin"
+  },
   "require": {
     "drupal/commerce": "^2.15",
     "drupal/commerce_currency_resolver": "^1",
