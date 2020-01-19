@@ -10,7 +10,7 @@ use Drupal\Tests\commerce\FunctionalJavascript\CommerceWebDriverTestBase;
  *
  * @group commerce_turtlecoin
  */
-class TurtleCoinGateway extends CommerceWebDriverTestBase {
+class TurtleCoinGatewayTest extends CommerceWebDriverTestBase {
 
   /**
    * Modules to enable.

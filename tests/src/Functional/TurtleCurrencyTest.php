@@ -10,7 +10,7 @@ use Drupal\commerce_price\Entity\Currency;
  *
  * @group commerce_turtlecoin
  */
-class TurtleCurrency extends BrowserTestBase {
+class TurtleCurrencyTest extends BrowserTestBase {
 
   /**
    * Modules to enable.

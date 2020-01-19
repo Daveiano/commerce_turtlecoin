@@ -9,7 +9,7 @@ use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
  *
  * @group commerce_turtlecoin
  */
-class TurtleCoinGateway extends CommerceBrowserTestBase {
+class TurtleCoinGatewayTest extends CommerceBrowserTestBase {
 
   /**
    * Modules to enable.
