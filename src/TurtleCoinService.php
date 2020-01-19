@@ -29,7 +29,7 @@ class TurtleCoinService {
    *   Valid or Invalid.
    */
   public static function validate($turtlecoin_address) {
-    if (strlen($turtlecoin_address) == 99 && substr($turtlecoin_address, 4)) {
+    if (strlen($turtlecoin_address) == 99 && substr($turtlecoin_address, 0, 4) === 'TRTL') {
       return TRUE;
     }
 

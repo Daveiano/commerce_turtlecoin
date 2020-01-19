@@ -2,15 +2,14 @@
 
 namespace Drupal\Tests\commerce_turtlecoin\Functional;
 
-use Drupal\Core\Url;
-use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
 
 /**
  * Simple test to ensure that main page loads with module enabled.
  *
- * @group content_helper
+ * @group commerce_turtlecoin
  */
-class LoadTest extends BrowserTestBase {
+class TurtleCoinGateway extends CommerceBrowserTestBase {
 
   /**
    * Modules to enable.
@@ -18,6 +17,13 @@ class LoadTest extends BrowserTestBase {
    * @var array
    */
   public static $modules = ['commerce_turtlecoin'];
+
+  /**
+   * The theme to use.
+   *
+   * @var string
+   */
+  protected $defaultTheme = 'stark';
 
   /**
    * A user with permission to administer site configuration.
@@ -31,7 +37,12 @@ class LoadTest extends BrowserTestBase {
    */
   protected function setUp() {
     parent::setUp();
-    $this->user = $this->drupalCreateUser(['administer site configuration']);
+
+    $this->user = $this->drupalCreateUser([
+      'administer site configuration',
+      'administer commerce_payment_gateway',
+    ]);
+
     $this->drupalLogin($this->user);
   }
 
