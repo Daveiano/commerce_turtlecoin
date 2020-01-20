@@ -2,15 +2,15 @@
 
 namespace Drupal\Tests\commerce_turtlecoin\Functional;
 
-use Drupal\Tests\BrowserTestBase;
 use Drupal\commerce_price\Entity\Currency;
+use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
 
 /**
  * Simple test to ensure that main page loads with module enabled.
  *
  * @group commerce_turtlecoin
  */
-class TurtleCurrencyTest extends BrowserTestBase {
+class TurtleCurrencyTest extends CommerceBrowserTestBase {
 
   /**
    * Modules to enable.

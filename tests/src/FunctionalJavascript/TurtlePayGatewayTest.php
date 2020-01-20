@@ -10,7 +10,7 @@ use Drupal\Tests\commerce\FunctionalJavascript\CommerceWebDriverTestBase;
  *
  * @group commerce_turtlecoin
  */
-class TurtleCoinGatewayTest extends CommerceWebDriverTestBase {
+class TurtlePayGatewayTest extends CommerceWebDriverTestBase {
 
   /**
    * Modules to enable.
@@ -56,39 +56,35 @@ class TurtleCoinGatewayTest extends CommerceWebDriverTestBase {
   public function testTurtleCoinGatewayAdd() {
     $this->drupalGet('admin/commerce/config/payment-gateways/add');
 
-    $this->getSession()->getPage()->fillField('edit-label', 'TurtleCoin');
-    $this->getSession()->getPage()->selectFieldOption('edit-plugin-turtlecoin-payment-gateway', 'turtlecoin_payment_gateway', FALSE);
+    $this->getSession()->getPage()->fillField('edit-label', 'TurtlePay');
+    $this->getSession()->getPage()->selectFieldOption('edit-plugin-turtlepay-payment-gateway', 'turtlepay_payment_gateway', FALSE);
 
     $this->assertSession()->assertWaitOnAjaxRequest();
 
-    $this->getSession()->getPage()->fillField('Display name', 'TurtleCoin');
+    $this->getSession()->getPage()->fillField('Display name', 'TurtlePay');
     $this->getSession()->getPage()->selectFieldOption('Debug', 'debug', FALSE);
-    $this->getSession()->getPage()->fillField('TurtleCoin address', 'TRTLv211SzUJigmnbqM5mYbv8asQvJEzBBWUdBNw2GSXMpDu3m2Csf63j2dHRSkCbDGMb24a4wTjc82JofqjgTao9zjd7ZZnhA1');
+    $this->getSession()->getPage()->fillField('TurtleCoin address', 'TRTLv1h8Ftb1sKNVFrXq7jYt4RsZVJcdVfda58UW5a7vLPDQP7dEivp579PHUosEECZLVo82FpHWvee4Xzy3b1ryhtj67XJG9Le');
+    $this->getSession()->getPage()->fillField('TurtleCoin private View Key', '67ff5aff44f8bf3487006cf53ebb6ca7137fdd234b9194d5ee9fb9d3b729920f');
     $this->getSession()->getPage()->selectFieldOption('Enabled', TRUE, FALSE);
 
     $this->getSession()->getPage()->pressButton('Save');
 
-    $this->assertSession()->pageTextContains('Saved the TurtleCoin payment gateway.');
-    // We also assert that there is no connection to wallet, but the status
-    // should be shown correct.
-    $this->assertSession()->pageTextContains('Could not connect to daemon:');
+    $this->assertSession()->pageTextContains('Saved the TurtlePay payment gateway.');
 
-    $payment_gateway = PaymentGateway::load('turtlecoin');
-    $this->assertEquals('turtlecoin', $payment_gateway->id());
-    $this->assertEquals('TurtleCoin', $payment_gateway->label());
-    $this->assertEquals('turtlecoin_payment_gateway', $payment_gateway->getPluginId());
+    $payment_gateway = PaymentGateway::load('turtlepay');
+    $this->assertEquals('turtlepay', $payment_gateway->id());
+    $this->assertEquals('TurtlePay', $payment_gateway->label());
+    $this->assertEquals('turtlepay_payment_gateway', $payment_gateway->getPluginId());
     $this->assertEquals(TRUE, $payment_gateway->status());
 
     $payment_gateway_plugin = $payment_gateway->getPlugin();
     $this->assertEquals('debug', $payment_gateway_plugin->getMode());
     $configuration = $payment_gateway_plugin->getConfiguration();
-    $this->assertEquals('TRTLv211SzUJigmnbqM5mYbv8asQvJEzBBWUdBNw2GSXMpDu3m2Csf63j2dHRSkCbDGMb24a4wTjc82JofqjgTao9zjd7ZZnhA1', $configuration['turtlecoin_address_store']);
+    $this->assertEquals('TRTLv1h8Ftb1sKNVFrXq7jYt4RsZVJcdVfda58UW5a7vLPDQP7dEivp579PHUosEECZLVo82FpHWvee4Xzy3b1ryhtj67XJG9Le', $configuration['turtlecoin_address_store']);
+    $this->assertEquals('67ff5aff44f8bf3487006cf53ebb6ca7137fdd234b9194d5ee9fb9d3b729920f', $configuration['turtlecoin_private_view_key']);
 
     // Check default values from the gateway.
-    $this->assertEquals('http://localhost', $configuration['wallet_api_host']);
-    $this->assertEquals('8070', $configuration['wallet_api_port']);
-    $this->assertEquals('password', $configuration['wallet_api_password']);
-    $this->assertEquals(3600, $configuration['wait_for_transactions_time']);
+    $this->assertEquals('https://yourdomain.com', $configuration['turtlepay_callback_host']);
   }
 
 }

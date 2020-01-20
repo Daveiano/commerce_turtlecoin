@@ -14,7 +14,7 @@ commerce_payment.commerce_payment_gateway.plugin.turtlecoin_payment_gateway:
       type: string
       label: 'The password the turtle-service uses to authorize.'
     wait_for_transactions_time:
-      type: number_integer
+      type: integer
       label: 'The time we should wait for a transaction until it is marked as voided, in seconds.'
 
 commerce_payment.commerce_payment_gateway.plugin.turtlepay_payment_gateway:
