@@ -19,11 +19,6 @@ class TurtlePayGatewayTest extends CommerceWebDriverTestBase {
    */
   public static $modules = [
     'commerce_turtlecoin',
-    'commerce_turtlecoin_test',
-    'commerce_product',
-    'commerce_order',
-    'commerce_cart',
-    'commerce_checkout',
   ];
 
   /**
@@ -45,25 +40,6 @@ class TurtlePayGatewayTest extends CommerceWebDriverTestBase {
    */
   protected function setUp() {
     parent::setUp();
-
-    $this->store->set('default_currency', 'TRT');
-
-    $variation = $this->createEntity('commerce_product_variation', [
-      'type' => 'default',
-      'sku' => strtolower($this->randomMachineName()),
-      'price' => [
-        'number' => 1000,
-        'currency_code' => 'TRT',
-      ],
-    ]);
-
-    /** @var \Drupal\commerce_product\Entity\ProductInterface $product */
-    $this->product = $this->createEntity('commerce_product', [
-      'type' => 'default',
-      'title' => 'My product',
-      'variations' => [$variation],
-      'stores' => [$this->store],
-    ]);
 
     $this->user = $this->drupalCreateUser([
       'administer site configuration',
@@ -111,33 +87,6 @@ class TurtlePayGatewayTest extends CommerceWebDriverTestBase {
 
     // Check default values from the gateway.
     $this->assertEquals('https://yourdomain.com', $configuration['turtlepay_callback_host']);
-  }
-
-  /**
-   * @todo Import payment gateway via configs in module.
-   * @todo Could be a functional test?
-   */
-  public function testTurtlePayCheckout() {
-    // Add to cart.
-    $this->drupalGet($this->product->toUrl());
-    $this->submitForm([], 'Add to cart');
-    $this->assertSession()->pageTextContains('My product added to your cart.');
-
-    // Go to cart.
-    $cart_link = $this->getSession()->getPage()->findLink('your cart');
-    $cart_link->click();
-    $this->assertSession()->pageTextContains('Shopping cart');
-    $this->submitForm([], 'Checkout');
-
-    // Checkout.
-    $this->assertSession()->pageTextContains('Order information');
-    $this->submitForm([], 'Continue to review');
-
-    // Review.
-    $this->assertSession()->pageTextContains('Review');
-    $this->assertSession()->pageTextContains('Payment information');
-    $this->assertSession()->pageTextContains('TurtlePay');
-    $this->submitForm([], 'Pay and complete purchase');
   }
 
 }

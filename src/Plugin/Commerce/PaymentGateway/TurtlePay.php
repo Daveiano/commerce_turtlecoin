@@ -239,7 +239,7 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
 
     // Perform a request to TurtlePay API.
     try {
-      $response = $this->httpClient->post("https://api.turtlepay.io/v1/new", [
+      $response = $this->httpClient->post("https://api.turtlepay.io/v2/new", [
         'headers' => [
           'Content-type' => 'application/json',
           'Accept' => 'application/json',
@@ -259,16 +259,16 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
       unset($turtlepay_checkout_response['sendToAddress']);
       unset($turtlepay_checkout_response['qrCode']);
       unset($turtlepay_checkout_response['callbackPublicKey']);
-      $payment->turtlepay_checkout_response = Json::encode($turtlepay_checkout_response);
+      $payment->set('turtlepay_checkout_response', Json::encode($turtlepay_checkout_response));
 
       // Save secret to payment.
-      $payment->turtlepay_callback_secret = $secret;
+      $payment->set('turtlepay_callback_secret', $secret);
 
       $payment->state = $received ? 'completed' : 'pending';
       $payment->save();
     }
     catch (RequestException $e) {
-      throw new PaymentGatewayException('Could not create payment. Message: ' . $e->getMessage(), $e->getCode(), $e);
+      throw new PaymentGatewayException('Could not create TurtlePay payment. Message: ' . $e->getMessage(), $e->getCode(), $e);
     }
   }
 
