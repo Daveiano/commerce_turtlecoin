@@ -1,0 +1,21 @@
+uuid: 0a7b1a7f-22d2-43f4-b49c-98d2451fe1e2
+langcode: en
+status: true
+dependencies:
+  module:
+    - commerce_turtlecoin
+id: turtlepay
+label: TurtlePay
+weight: null
+plugin: turtlepay_payment_gateway
+configuration:
+  turtlecoin_address_store: TRTLv211SzUJigmnbqM5mYbv8asQvJEzBBWUdBNw2GSXMpDu3m2Csf63j2dHRSkCbDGMb24a4wTjc82JofqjgTao9zjd7ZZnhA1
+  turtlecoin_private_view_key: 67ff5aff44f8bf3487006cf53ebb6ca7137fdd234b9194d5ee9fb9d3b729920f
+  turtlepay_callback_host: 'https://yourdomain.com'
+  display_label: TurtlePay
+  mode: debug
+  payment_method_types:
+    - credit_card
+  collect_billing_information: false
+conditions: {  }
+conditionOperator: AND
