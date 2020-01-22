@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_turtlecoin\Functional;
 
+use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_payment\Entity\PaymentGateway;
 use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
 
@@ -76,8 +77,7 @@ class TurtlePayGatewayTest extends CommerceBrowserTestBase {
   }
 
   /**
-   * @todo Could be a functional test?
-   * @todo Import payment gateway via configs in module.
+   * Tests the checkout process with TurtlePay.
    *
    * @throws \Behat\Mink\Exception\ResponseTextException
    */
@@ -103,8 +103,10 @@ class TurtlePayGatewayTest extends CommerceBrowserTestBase {
     $this->assertSession()->pageTextContains('Review');
     $this->assertSession()->pageTextContains('Payment information');
     $this->assertSession()->pageTextContains('TurtlePay');
-    // TODO: Assert order total.
     $this->submitForm([], 'Pay and complete purchase');
+
+    // TODO: Assert order total and so on.
+    $order = Order::load(1);
   }
 
   /**

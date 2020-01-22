@@ -85,6 +85,7 @@ function commerce_turtlecoin_theme($existing, $type, $theme, $path) {
     'turtlecoin_turtle_pay_payment_instructions' => [
       'variables' => [
         'payment_amount' => NULL,
+        'payment_amount_atomic' => NULL,
         'turtle_address' => NULL,
         'validity_time_blocks' => NULL,
         'validity_time' => NULL,

@@ -172,7 +172,8 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
 
     $instructions = [
       '#theme' => 'turtlecoin_turtle_pay_payment_instructions',
-      '#payment_amount' => $payment->getAmount(),
+      '#payment_amount' => $payment->getAmount()->__toString(),
+      '#payment_amount_atomic' => $payment->getAmount()->multiply(100)->getNumber(),
       '#turtle_address' => $payment->getRemoteId(),
       '#validity_time' => $validity_time / 60,
       '#validity_time_blocks' => $validity_time,
