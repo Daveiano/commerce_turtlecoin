@@ -3,8 +3,11 @@
 namespace Drupal\Tests\commerce_turtlecoin\Functional;
 
 use Drupal\commerce_order\Entity\Order;
-use Drupal\commerce_payment\Entity\PaymentGateway;
+use Drupal\commerce_payment\Entity\Payment;
+use Drupal\commerce_price\Price;
+use Drupal\Component\Serialization\Json;
 use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
+use Drupal\commerce_turtlecoin\TurtleCoinService;
 
 /**
  * Simple test to ensure that main page loads with module enabled.
@@ -105,8 +108,27 @@ class TurtlePayGatewayTest extends CommerceBrowserTestBase {
     $this->assertSession()->pageTextContains('TurtlePay');
     $this->submitForm([], 'Pay and complete purchase');
 
-    // TODO: Assert order total and so on.
+    // Assert payment instructions.
+    $this->assertSession()->pageTextContains('Please transfer the amount of 1000 TRTL to TRTL');
+    $this->assertSession()->pageTextContains('Warning: This address will only be active for about 60 Blocks (1h)');
+
+    // Assert some order values.
     $order = Order::load(1);
+    $this->assertEquals('completed', $order->getState()->getId());
+    $this->assertEquals('complete', $order->get('checkout_step')->first()->getValue()['value']);
+    $this->assertEquals('turtlepay_payment_gateway', $order->get('payment_gateway')->entity->getPluginId());
+    $this->assertEquals(new Price(1000, 'TRT'), $order->getTotalPrice());
+
+    // Validate the created payment.
+    $payment = Payment::load(1);
+    $this->assertEquals(new Price(1000, 'TRT'), $payment->getAmount());
+    $turtlepay_response = $payment->get('turtlepay_checkout_response')->value;
+    $turtlepay_response = Json::decode($turtlepay_response);
+    $this->assertNotEmpty($turtlepay_response, 'No response from TurtlePay.');
+    $this->assertEquals('pending', $payment->getState()->getId());
+
+    // Validate the address.
+    $this->assertTrue(TurtleCoinService::validate($payment->getRemoteId()), 'TurtleCoin sendTo address is not valid.');
   }
 
   /**
