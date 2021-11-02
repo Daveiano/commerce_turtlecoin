@@ -1,0 +1,7 @@
+name: 'Commerce TurtleCoin test module'
+type: module
+description: 'Provides install configs for Commerce TurtleCoin tests.'
+package: Testing
+core: 8.x
+dependencies:
+  - commerce_turtlecoin:commerce_turtlecoin

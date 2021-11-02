@@ -29,7 +29,8 @@ class TurtleCoinService {
    *   Valid or Invalid.
    */
   public static function validate($turtlecoin_address) {
-    if (strlen($turtlecoin_address) == 99 && substr($turtlecoin_address, 0, 4) === 'TRTL') {
+    // Check for addresses and integrated addresses.
+    if ((strlen($turtlecoin_address) == 99 || strlen($turtlecoin_address) == 187) && substr($turtlecoin_address, 0, 4) === 'TRTL') {
       return TRUE;
     }
 

@@ -172,7 +172,8 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
 
     $instructions = [
       '#theme' => 'turtlecoin_turtle_pay_payment_instructions',
-      '#payment_amount' => $payment->getAmount(),
+      '#payment_amount' => $payment->getAmount()->__toString(),
+      '#payment_amount_atomic' => $payment->getAmount()->multiply(100)->getNumber(),
       '#turtle_address' => $payment->getRemoteId(),
       '#validity_time' => $validity_time / 60,
       '#validity_time_blocks' => $validity_time,
@@ -222,7 +223,8 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
 
     // Generate a secret and unique string for the callback url.
     $secret = Crypt::randomBytesBase64(96);
-    $payment_amount = floatval($payment->getAmount()->getNumber()) * 100;
+    // TODO: floatVal and intVal?
+    $payment_amount = floatval($payment->getAmount()->multiply(100)->getNumber());
 
     $data = Json::encode([
       // TODO: PHP 7.1 does strange things with the numbers?
@@ -239,7 +241,7 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
 
     // Perform a request to TurtlePay API.
     try {
-      $response = $this->httpClient->post("https://api.turtlepay.io/v1/new", [
+      $response = $this->httpClient->post("https://api.turtlepay.io/v2/new", [
         'headers' => [
           'Content-type' => 'application/json',
           'Accept' => 'application/json',
@@ -259,16 +261,16 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
       unset($turtlepay_checkout_response['sendToAddress']);
       unset($turtlepay_checkout_response['qrCode']);
       unset($turtlepay_checkout_response['callbackPublicKey']);
-      $payment->turtlepay_checkout_response = Json::encode($turtlepay_checkout_response);
+      $payment->set('turtlepay_checkout_response', Json::encode($turtlepay_checkout_response));
 
       // Save secret to payment.
-      $payment->turtlepay_callback_secret = $secret;
+      $payment->set('turtlepay_callback_secret', $secret);
 
       $payment->state = $received ? 'completed' : 'pending';
       $payment->save();
     }
     catch (RequestException $e) {
-      throw new PaymentGatewayException('Could not create payment. Message: ' . $e->getMessage(), $e->getCode(), $e);
+      throw new PaymentGatewayException('Could not create TurtlePay payment. Message: ' . $e->getMessage(), $e->getCode(), $e);
     }
   }
 

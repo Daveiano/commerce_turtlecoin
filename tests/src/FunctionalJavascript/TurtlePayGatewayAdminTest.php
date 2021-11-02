@@ -10,14 +10,16 @@ use Drupal\Tests\commerce\FunctionalJavascript\CommerceWebDriverTestBase;
  *
  * @group commerce_turtlecoin
  */
-class TurtlePayGatewayTest extends CommerceWebDriverTestBase {
+class TurtlePayGatewayAdminTest extends CommerceWebDriverTestBase {
 
   /**
    * Modules to enable.
    *
    * @var array
    */
-  public static $modules = ['commerce_turtlecoin'];
+  public static $modules = [
+    'commerce_turtlecoin',
+  ];
 
   /**
    * The theme to use.
@@ -53,15 +55,15 @@ class TurtlePayGatewayTest extends CommerceWebDriverTestBase {
    * @throws \Behat\Mink\Exception\ElementNotFoundException
    * @throws \Behat\Mink\Exception\ResponseTextException
    */
-  public function testTurtleCoinGatewayAdd() {
+  public function testTurtlePayGatewayAdd() {
     $this->drupalGet('admin/commerce/config/payment-gateways/add');
 
-    $this->getSession()->getPage()->fillField('edit-label', 'TurtlePay');
+    $this->getSession()->getPage()->fillField('edit-label', 'TurtlePay2');
     $this->getSession()->getPage()->selectFieldOption('edit-plugin-turtlepay-payment-gateway', 'turtlepay_payment_gateway', FALSE);
 
     $this->assertSession()->assertWaitOnAjaxRequest();
 
-    $this->getSession()->getPage()->fillField('Display name', 'TurtlePay');
+    $this->getSession()->getPage()->fillField('Display name', 'TurtlePay2');
     $this->getSession()->getPage()->selectFieldOption('Debug', 'debug', FALSE);
     $this->getSession()->getPage()->fillField('TurtleCoin address', 'TRTLv1h8Ftb1sKNVFrXq7jYt4RsZVJcdVfda58UW5a7vLPDQP7dEivp579PHUosEECZLVo82FpHWvee4Xzy3b1ryhtj67XJG9Le');
     $this->getSession()->getPage()->fillField('TurtleCoin private View Key', '67ff5aff44f8bf3487006cf53ebb6ca7137fdd234b9194d5ee9fb9d3b729920f');
@@ -69,11 +71,11 @@ class TurtlePayGatewayTest extends CommerceWebDriverTestBase {
 
     $this->getSession()->getPage()->pressButton('Save');
 
-    $this->assertSession()->pageTextContains('Saved the TurtlePay payment gateway.');
+    $this->assertSession()->pageTextContains('Saved the TurtlePay2 payment gateway.');
 
-    $payment_gateway = PaymentGateway::load('turtlepay');
-    $this->assertEquals('turtlepay', $payment_gateway->id());
-    $this->assertEquals('TurtlePay', $payment_gateway->label());
+    $payment_gateway = PaymentGateway::load('turtlepay2');
+    $this->assertEquals('turtlepay2', $payment_gateway->id());
+    $this->assertEquals('TurtlePay2', $payment_gateway->label());
     $this->assertEquals('turtlepay_payment_gateway', $payment_gateway->getPluginId());
     $this->assertEquals(TRUE, $payment_gateway->status());
 
