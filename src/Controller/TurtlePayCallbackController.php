@@ -11,7 +11,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\Component\Serialization\Json;
 
 /**
- * Class TurtlePayCallbackController.
+ * Process responses from TurtlePay.
+ *
+ * @see https://docs.turtlepay.io/api/
  */
 class TurtlePayCallbackController extends ControllerBase implements ContainerInjectionInterface {
 
@@ -119,7 +121,7 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
           // sentFunds.
           // Called when we relay funds to the specified wallet.
           $payment->setState('completed');
-          $payment->turtlepay_tx_hash = $data['txnHash'];
+          $payment->turtlepay_tx_hash = $data['transactions'][0][0];
           $payment->save();
           \Drupal::logger('commerce_turtlecoin')->notice('Payment completed! Payment ID: @payment_id.', [
             '@payment_id' => $payment_id,

@@ -3,15 +3,21 @@
 namespace Drupal\Tests\commerce_turtlecoin\Kernel;
 
 use Drupal\commerce_order\Entity\Order;
-use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_payment\Entity\Payment;
 use Drupal\commerce_price\Price;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Crypt;
-use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
+use Symfony\Component\HttpFoundation\Request;
 
+/**
+ * Test TurtlePay responses.
+ *
+ * @see https://docs.turtlepay.io/api/
+ *
+ * @group commerce_turtlecoin
+ */
 class TurtlePayResponsesTest extends OrderKernelTestBase {
 
   /**
@@ -29,11 +35,11 @@ class TurtlePayResponsesTest extends OrderKernelTestBase {
   ];
 
   /**
-   * The HTTP client.
+   * The Tx.
    *
-   * @var \GuzzleHttp\Client
+   * @var string
    */
-  protected $httpClient;
+  protected $finalTransactionHash;
 
   /**
    * {@inheritdoc}
@@ -49,56 +55,151 @@ class TurtlePayResponsesTest extends OrderKernelTestBase {
     $this->installConfig(['commerce_turtlecoin']);
     $this->installConfig(['commerce_turtlecoin_test']);
 
-    $this->httpClient = $this->container->get('http_client');
+    $this->finalTransactionHash = 'bdb052ef739064650239e53b34572a7f5d6103a7f68283d3218d306c4a77400a';
   }
 
   /**
-   * @todo Create a mock response from turtlePay and check payment
-   *  transitions (every).
+   * Test void transition.
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
    */
-  public function testPaymentTransition() {
-    $order = $this->createOrderWithPayment();
-    $payment_id = $order->get('payment_method')->getValue()[0]["target_id"];
-    $payment = Payment::load($payment_id);
+  public function testPaymentTransitionVoided() {
+    $payment = $this->createOrderWithPayment();
+    $this->assertEquals('pending', $payment->getState()->getId());
 
-    $data = Json::encode([
+    $response_body = $this->createTurtlePayResponseMockRequest($payment, 408);
+
+    $this->assertEquals(['success' => TRUE], $response_body);
+    $this->assertEquals('voided', $payment->getState()->getId());
+  }
+
+  /**
+   * Test partially_payed transition.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
+   */
+  public function testPaymentTransitionPartiallyPaid() {
+    $payment = $this->createOrderWithPayment();
+    $this->assertEquals('pending', $payment->getState()->getId());
+
+    $response_body = $this->createTurtlePayResponseMockRequest($payment, 402);
+
+    $this->assertEquals(['success' => TRUE], $response_body);
+    $this->assertEquals('partially_payed', $payment->getState()->getId());
+  }
+
+  /**
+   * Test in_progress transition.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
+   */
+  public function testPaymentTransitionInProgress() {
+    $payment = $this->createOrderWithPayment();
+    $this->assertEquals('pending', $payment->getState()->getId());
+
+    $response_body = $this->createTurtlePayResponseMockRequest($payment, 102);
+
+    $this->assertEquals(['success' => TRUE], $response_body);
+    $this->assertEquals('in_progress', $payment->getState()->getId());
+  }
+
+  /**
+   * Test sent transition.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
+   */
+  public function testPaymentTransitionSent() {
+    $payment = $this->createOrderWithPayment();
+    $this->assertEquals('pending', $payment->getState()->getId());
+
+    $response_body = $this->createTurtlePayResponseMockRequest($payment, 100);
+
+    $this->assertEquals(['success' => TRUE], $response_body);
+    $this->assertEquals('sent', $payment->getState()->getId());
+  }
+
+  /**
+   * Test completed transition.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
+   */
+  public function testPaymentTransitionCompleted() {
+    $payment = $this->createOrderWithPayment();
+    $this->assertEquals('pending', $payment->getState()->getId());
+
+    $response_body = $this->createTurtlePayResponseMockRequest($payment, 200);
+
+    $this->assertEquals(['success' => TRUE], $response_body);
+    $this->assertEquals('completed', $payment->getState()->getId());
+    $this->assertEquals($this->finalTransactionHash, $payment->get('turtlepay_tx_hash')->getValue()[0]['value']);
+  }
+
+  /**
+   * Create a TurtlePay response mock and post it to the Controller.
+   *
+   * @param \Drupal\commerce_payment\Entity\Payment $payment
+   *   The commerce payment.
+   * @param int $status
+   *   The response status.
+   *
+   * @return mixed
+   *   Requests response body.
+   *
+   * @throws \Exception
+   */
+  protected function createTurtlePayResponseMockRequest(Payment $payment, int $status) {
+    $data = [
       "address" => "TRTLuxnZiWkAEhvAoGSkNEHG3aKS5db1WHnoxarheb4M9jLArMU59y2HxWzuyvsXCDHvvfk7c8dZSAZquLJiyv5f96P9kTcj1BM1mUMQf5KdydAh7ewz1GrHsJVpYiWkonuRUCRWSuWUMkfL6p7a7g3Eq5N1FEctyxhv41S3cwC72caRfaAhMipghbt",
       "paymentId" => "376178ab0113a5ae930eda9e9de2419ede7aead3e8fbe7b7e65191de15f20b63",
-      "status" => 100,
+      "status" => $status,
       "request" => [
         "address" => "TRTLuxN6FVALYxeAEKhtWDYNS9Vd9dHVp3QHwjKbo76ggQKgUfVjQp8iPypECCy3MwZVyu89k1fWE2Ji6EKedbrqECHHWouZN6g",
         "amount" => 100,
         "userDefined" => [],
       ],
       "amount" => 100,
-    ]);
+    ];
 
-    $test = \Drupal::request()->getUri();
+    if ($status === 200) {
+      $data = $data + [
+        'transactions' => [[$this->finalTransactionHash]],
+      ];
+    }
 
-    $response = $this->httpClient->post(\Drupal::request()->getSchemeAndHttpHost() . '/commerce_turtlecoin/api/v1/turtlepay/' . $payment->get('turtlepay_callback_secret')->value . '/' . $payment_id, [
-      'headers' => [
-        'Content-type' => 'application/json',
-        'Accept' => 'application/json',
-      ],
-      'body' => $data,
-    ]);
+    $request = Request::create(
+      '/commerce_turtlecoin/api/v1/turtlepay/' . $payment->get('turtlepay_callback_secret')->value . '/' . $payment->id(),
+      'POST',
+      [],
+      [],
+      [],
+      [],
+      Json::encode($data)
+    );
+    $request->headers->set('Content-type', 'application/json');
+    $request->headers->set('Accept', 'application/json');
 
-    $response_body = Json::decode($response->getBody()->getContents());
+    /** @var \Symfony\Component\HttpKernel\HttpKernelInterface $kernel */
+    $kernel = \Drupal::getContainer()->get('http_kernel');
+    $response = $kernel->handle($request);
+    $response_body = Json::decode($response->getContent());
+
+    return $response_body;
   }
 
   /**
    * Create an order with payment and mocked TurtlePay response.
    *
-   * @todo Create trait for creating order and payment.
-   *
-   * @return \Drupal\commerce_order\Entity\OrderInterface
+   * @return \Drupal\commerce_payment\Entity\Payment
    *   The created commerce order.
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  protected function createOrderWithPayment(): OrderInterface {
+  protected function createOrderWithPayment(): Payment {
     /** @var \Drupal\commerce_order\Entity\OrderItemInterface $order_item */
     $order_item = OrderItem::create([
       'title' => 'My product',
@@ -149,7 +250,11 @@ class TurtlePayResponsesTest extends OrderKernelTestBase {
 
     $order = $this->reloadEntity($order);
 
-    return $order;
+    $payment_id = $order->get('payment_method')->getValue()[0]["target_id"];
+    /** @var \Drupal\commerce_payment\Entity\Payment $payment */
+    $payment = Payment::load($payment_id);
+
+    return $payment;
   }
 
 }

@@ -8,7 +8,7 @@ use Drupal\commerce_price\Price;
 use Drupal\Component\Serialization\Json;
 use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
 use Drupal\commerce_turtlecoin\TurtleCoinService;
-use Drupal\Tests\commerce_turtlecoin\Traits\CommerceTrutlecoinOrderDataTrait;
+use Drupal\Tests\commerce_turtlecoin\Traits\CommerceTurtlecoinOrderDataTrait;
 
 /**
  * Tests turtlepay checkout and payment workflow.
@@ -19,7 +19,7 @@ use Drupal\Tests\commerce_turtlecoin\Traits\CommerceTrutlecoinOrderDataTrait;
  */
 class TurtlePayTest extends CommerceBrowserTestBase {
 
-  use CommerceTrutlecoinOrderDataTrait;
+  use CommerceTurtlecoinOrderDataTrait;
 
   /**
    * Modules to enable.

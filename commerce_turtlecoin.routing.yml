@@ -4,5 +4,5 @@ commerce_turtlecoin.turtle_pay_callback:
     _controller: '\Drupal\commerce_turtlecoin\Controller\TurtlePayCallbackController::postProcess'
   methods: [POST]
   requirements:
-    _permission: 'access content'
+    _access: 'TRUE'
     _content_type_format: json

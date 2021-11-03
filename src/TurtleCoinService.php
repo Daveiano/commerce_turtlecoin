@@ -3,7 +3,7 @@
 namespace Drupal\commerce_turtlecoin;
 
 /**
- * Class TurtleCoinService.
+ * General TurtleCoin stuff.
  */
 class TurtleCoinService {
 

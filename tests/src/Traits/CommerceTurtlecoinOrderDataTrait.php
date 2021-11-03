@@ -6,11 +6,20 @@ use Drupal\commerce_store\Entity\Store;
 use Drupal\Tests\commerce\Traits\CommerceBrowserTestTrait;
 use Drupal\Tests\RandomGeneratorTrait;
 
-trait CommerceTrutlecoinOrderDataTrait {
+/**
+ * Create a basic variation and product.
+ */
+trait CommerceTurtlecoinOrderDataTrait {
 
   use CommerceBrowserTestTrait;
   use RandomGeneratorTrait;
 
+  /**
+   * Create a test product variation.
+   *
+   * @return \Drupal\Core\Entity\EntityInterface
+   *   Created commerce_product_variation.
+   */
   protected function createVariation() {
     return $this->createEntity('commerce_product_variation', [
       'type' => 'default',

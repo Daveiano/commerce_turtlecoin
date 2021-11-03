@@ -7,6 +7,8 @@ use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 
 /**
  * Test TRTL currency config.
+ *
+ * @group commerce_turtlecoin
  */
 class TurtlecoinCurrencyTest extends CommerceKernelTestBase {
 

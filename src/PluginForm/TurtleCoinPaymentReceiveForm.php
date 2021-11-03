@@ -7,7 +7,7 @@ use Drupal\commerce_price\Price;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Class TurtleCoinPaymentReceiveForm.
+ * TurtleCoin Payment Receive Form.
  *
  * @package Drupal\commerce_turtlecoin\PluginForm
  */
