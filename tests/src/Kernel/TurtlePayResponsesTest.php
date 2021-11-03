@@ -3,6 +3,7 @@
 namespace Drupal\Tests\commerce_turtlecoin\Kernel;
 
 use Drupal\commerce_order\Entity\Order;
+use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_payment\Entity\Payment;
 use Drupal\commerce_price\Price;
@@ -28,6 +29,13 @@ class TurtlePayResponsesTest extends OrderKernelTestBase {
   ];
 
   /**
+   * The HTTP client.
+   *
+   * @var \GuzzleHttp\Client
+   */
+  protected $httpClient;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -40,16 +48,44 @@ class TurtlePayResponsesTest extends OrderKernelTestBase {
     $this->installConfig(['commerce_exchanger_cryptocompare']);
     $this->installConfig(['commerce_turtlecoin']);
     $this->installConfig(['commerce_turtlecoin_test']);
+
+    $this->httpClient = $this->container->get('http_client');
   }
 
-  // @todo Create a mock response from turtlePay and check payment
-  //   transitions (every).
-  // @todo Could be a kernel test?
+  /**
+   * @todo Create a mock response from turtlePay and check payment
+   *  transitions (every).
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
   public function testPaymentTransition() {
     $order = $this->createOrderWithPayment();
-    // TODO: Payment is null - $order->get('payment_method')->first() works.
-    $payment = $order->get('payment_method')->getValue();
-    $payment = Payment::load($payment[0]["target_id"]);
+    $payment_id = $order->get('payment_method')->getValue()[0]["target_id"];
+    $payment = Payment::load($payment_id);
+
+    $data = Json::encode([
+      "address" => "TRTLuxnZiWkAEhvAoGSkNEHG3aKS5db1WHnoxarheb4M9jLArMU59y2HxWzuyvsXCDHvvfk7c8dZSAZquLJiyv5f96P9kTcj1BM1mUMQf5KdydAh7ewz1GrHsJVpYiWkonuRUCRWSuWUMkfL6p7a7g3Eq5N1FEctyxhv41S3cwC72caRfaAhMipghbt",
+      "paymentId" => "376178ab0113a5ae930eda9e9de2419ede7aead3e8fbe7b7e65191de15f20b63",
+      "status" => 100,
+      "request" => [
+        "address" => "TRTLuxN6FVALYxeAEKhtWDYNS9Vd9dHVp3QHwjKbo76ggQKgUfVjQp8iPypECCy3MwZVyu89k1fWE2Ji6EKedbrqECHHWouZN6g",
+        "amount" => 100,
+        "userDefined" => [],
+      ],
+      "amount" => 100,
+    ]);
+
+    $test = \Drupal::request()->getUri();
+
+    $response = $this->httpClient->post(\Drupal::request()->getSchemeAndHttpHost() . '/commerce_turtlecoin/api/v1/turtlepay/' . $payment->get('turtlepay_callback_secret')->value . '/' . $payment_id, [
+      'headers' => [
+        'Content-type' => 'application/json',
+        'Accept' => 'application/json',
+      ],
+      'body' => $data,
+    ]);
+
+    $response_body = Json::decode($response->getBody()->getContents());
   }
 
   /**
@@ -57,12 +93,12 @@ class TurtlePayResponsesTest extends OrderKernelTestBase {
    *
    * @todo Create trait for creating order and payment.
    *
-   * @return \Drupal\Core\Entity\EntityInterface
+   * @return \Drupal\commerce_order\Entity\OrderInterface
    *   The created commerce order.
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  protected function createOrderWithPayment() {
+  protected function createOrderWithPayment(): OrderInterface {
     /** @var \Drupal\commerce_order\Entity\OrderItemInterface $order_item */
     $order_item = OrderItem::create([
       'title' => 'My product',
