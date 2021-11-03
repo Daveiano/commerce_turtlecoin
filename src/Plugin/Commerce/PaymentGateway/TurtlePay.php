@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_turtlecoin\Plugin\Commerce\PaymentGateway;
 
+use Drupal\commerce_exchanger\ExchangerCalculatorInterface;
 use Drupal\commerce_payment\PaymentMethodTypeManager;
 use Drupal\commerce_payment\PaymentTypeManager;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\PaymentGatewayBase;
@@ -58,6 +59,13 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
   protected $turtleCoinService;
 
   /**
+   * Price Calculator.
+   *
+   * @var \Drupal\commerce_exchanger\ExchangerCalculatorInterface
+   */
+  protected $calculator;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -70,18 +78,20 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
       $container->get('plugin.manager.commerce_payment_method_type'),
       $container->get('datetime.time'),
       $container->get('http_client'),
-      $container->get('commerce_turtlecoin.turtle_coin_service')
+      $container->get('commerce_turtlecoin.turtle_coin_service'),
+      $container->get('commerce_currency_resolver.calculator')
     );
   }
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time, ClientInterface $http_client, TurtleCoinService $turtle_coin_service) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time, ClientInterface $http_client, TurtleCoinService $turtle_coin_service, ExchangerCalculatorInterface $calculator) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager, $time);
 
     $this->httpClient = $http_client;
     $this->turtleCoinService = $turtle_coin_service;
+    $this->calculator = $calculator;
   }
 
   /**
@@ -219,16 +229,17 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
     // See \Drupal\commerce_payment\Exception for the available exceptions.
     $this->assertPaymentState($payment, ['new']);
     // Save the payment to get it's ID for the callback.
+    $payment->setAmount($this->calculator->priceConversion($payment->getAmount(), $this->turtleCoinService::TURTLE_CURRENCY_CODE_PSEUDO));
     $payment->save();
 
     // Generate a secret and unique string for the callback url.
     $secret = Crypt::randomBytesBase64(96);
-    // TODO: floatVal and intVal?
+    // @todo floatVal and intVal?
     $payment_amount = floatval($payment->getAmount()->multiply(100)->getNumber());
 
     $data = Json::encode([
-      // TODO: PHP 7.1 does strange things with the numbers?
-      // TODO: The privateViewKey is a new requirement?
+      // @todo PHP 7.1 does strange things with the numbers?
+      // @todo The privateViewKey is a new requirement?
       // @see https://docs.turtlepay.io/api/
       'amount' => intval($payment_amount),
       'address' => $this->getConfiguration()['turtlecoin_address_store'],
@@ -301,7 +312,7 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
    * {@inheritdoc}
    */
   public function refundPayment(PaymentInterface $payment, Price $amount = NULL) {
-    // TODO: Does this make sense?
+    // @todo Does this make sense?
     $this->assertPaymentState($payment, ['completed', 'partially_refunded']);
     // If not specified, refund the entire amount.
     $amount = $amount ?: $payment->getAmount();

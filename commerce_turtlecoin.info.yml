@@ -5,3 +5,5 @@ package: Commerce (contrib)
 core: 8.x
 dependencies:
   - commerce:commerce_payment (>=2.15)
+  - commerce_currency_resolver:commerce_currency_resolver
+  - commerce_exchanger_cryptocompare:commerce_exchanger_cryptocompare

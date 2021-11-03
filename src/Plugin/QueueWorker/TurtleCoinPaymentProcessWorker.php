@@ -49,6 +49,8 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
 
   /**
    * {@inheritdoc}
+   *
+   * @todo New state: pending, when incoming but not confirmed?
    */
   public function processItem($item) {
     if ($item->mode === 'debug') {

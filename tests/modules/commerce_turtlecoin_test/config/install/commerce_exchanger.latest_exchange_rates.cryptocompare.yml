@@ -1,0 +1,9 @@
+rates:
+  USD:
+    TRT:
+      value: 10525.43
+      sync: 0
+  TRT:
+    USD:
+      value: 9.5E-5
+      sync: 0
