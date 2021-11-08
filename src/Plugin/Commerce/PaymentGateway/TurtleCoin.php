@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_turtlecoin\Plugin\Commerce\PaymentGateway;
 
+use Drupal\commerce_exchanger\ExchangerCalculatorInterface;
 use Drupal\commerce_payment\PaymentMethodTypeManager;
 use Drupal\commerce_payment\PaymentTypeManager;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\PaymentGatewayBase;
@@ -56,6 +57,13 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
   protected $turtleCoinService;
 
   /**
+   * Price Calculator.
+   *
+   * @var \Drupal\commerce_exchanger\ExchangerCalculatorInterface
+   */
+  protected $calculator;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -67,24 +75,29 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
       $container->get('plugin.manager.commerce_payment_type'),
       $container->get('plugin.manager.commerce_payment_method_type'),
       $container->get('datetime.time'),
-      $container->get('commerce_turtlecoin.turtle_coin_service')
+      $container->get('commerce_turtlecoin.turtle_coin_service'),
+      $container->get('commerce_currency_resolver.calculator')
     );
   }
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time, TurtleCoinService $turtle_coin_service) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time, TurtleCoinService $turtle_coin_service, ExchangerCalculatorInterface $calculator) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager, $time);
 
     $config = [
       'rpcHost' => $this->getConfiguration()['wallet_api_host'],
       'rpcPort' => $this->getConfiguration()['wallet_api_port'],
       'rpcPassword' => $this->getConfiguration()['wallet_api_password'],
+      'handler' => \Drupal::httpClient()->getConfig()['handler'],
     ];
+
+    $test = $_SERVER;
 
     $this->turtleService = new TurtleService($config);
     $this->turtleCoinService = $turtle_coin_service;
+    $this->calculator = $calculator;
   }
 
   /**
@@ -208,7 +221,8 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
   public function buildPaymentInstructions(PaymentInterface $payment) {
     $instructions = [
       '#theme' => 'turtlecoin_turtlecoin_payment_instructions',
-      '#payment_amount' => $payment->getAmount(),
+      '#payment_amount' => $payment->getAmount()->__toString(),
+      '#payment_amount_atomic' => $payment->getAmount()->multiply(100)->getNumber(),
       '#turtle_address' => $payment->get('turtle_coin_integrated_address')->value,
       '#validity_time' => $this->getConfiguration()['wait_for_transactions_time'] / 3600,
       '#validity_time_blocks' => $this->getConfiguration()['wait_for_transactions_time'] / 30,
@@ -250,6 +264,9 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
    */
   public function createPayment(PaymentInterface $payment, $received = FALSE) {
     $this->assertPaymentState($payment, ['new']);
+
+    $payment->setAmount($this->calculator->priceConversion($payment->getAmount(), $this->turtleCoinService::TURTLE_CURRENCY_CODE_PSEUDO));
+    $payment->save();
 
     // Create an integrated address for better transaction mapping via
     // integrated payment id.
@@ -322,7 +339,7 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
   /**
    * {@inheritdoc}
    *
-   * TODO: Does this make sense?
+   * @todo Does this make sense?
    */
   public function refundPayment(PaymentInterface $payment, Price $amount = NULL) {
     $this->assertPaymentState($payment, ['completed', 'partially_refunded']);

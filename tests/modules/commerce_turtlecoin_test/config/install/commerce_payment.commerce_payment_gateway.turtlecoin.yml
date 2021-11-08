@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - commerce_turtlecoin
+id: turtlecoin
+label: TurtleCoin
+weight: null
+plugin: turtlecoin_payment_gateway
+configuration:
+  turtlecoin_address_store: TRTLuxN6FVALYxeAEKhtWDYNS9Vd9dHVp3QHwjKbo76ggQKgUfVjQp8iPypECCy3MwZVyu89k1fWE2Ji6EKedbrqECHHWouZN6g
+  wallet_api_host: 'http://localhost'
+  wallet_api_port: '8070'
+  wallet_api_password: password
+  wait_for_transactions_time: 3600
+  display_label: TurtleCoin
+  mode: debug
+  payment_method_types:
+    - credit_card
+  collect_billing_information: false
+conditions: {  }
+conditionOperator: AND

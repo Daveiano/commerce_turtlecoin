@@ -1,0 +1,5 @@
+services:
+  commerce_turtlecoin_test.client_middleware:
+    class: Drupal\commerce_turtlecoin_test\TurtleRPCMiddleware
+    tags:
+      - { name: http_client_middleware }

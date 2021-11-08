@@ -10,13 +10,19 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
 use Drupal\commerce_turtlecoin\TurtleCoinService;
 use Drupal\Tests\commerce_turtlecoin\Traits\CommerceTurtlecoinOrderDataTrait;
+use GuzzleHttp\MessageFormatter;
+use Namshi\Cuzzle\Middleware\CurlFormatterMiddleware;
+use Concat\Http\Middleware\Logger;
+use Psr\Log\LogLevel;
+use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 /**
- * Tests turtlepay checkout and payment workflow.
+ * Tests turtlecoin checkout and payment workflow.
  *
  * @group commerce_turtlecoin
  */
-class TurtlePayTest extends CommerceBrowserTestBase {
+class TurtlecoinTest extends CommerceBrowserTestBase {
 
   use CommerceTurtlecoinOrderDataTrait;
 
@@ -60,6 +66,14 @@ class TurtlePayTest extends CommerceBrowserTestBase {
   protected $product;
 
   /**
+   * The turtlecoin_payment_process_worker queue.
+   *
+   * @var \Drupal\Core\Queue\QueueInterface
+   */
+  protected $queue;
+
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -77,26 +91,30 @@ class TurtlePayTest extends CommerceBrowserTestBase {
     /** @var \Drupal\commerce_product\Entity\ProductInterface $product */
     $this->product = $this->createProduct($this->store);
 
+    $turtle_pay_gateway = PaymentGateway::load('turtlepay');
+    $turtle_pay_gateway->delete();
+
     $this->user = $this->drupalCreateUser([
       'administer site configuration',
       'administer commerce_payment_gateway',
     ]);
 
-    $this->drupalLogin($this->user);
+    $this->queue = $this->container->get('queue')->get('turtlecoin_payment_process_worker');
 
-    $turtle_pay_gateway = PaymentGateway::load('turtlecoin');
-    $turtle_pay_gateway->delete();
+    $this->drupalLogin($this->user);
   }
 
   /**
-   * Tests the checkout process with TurtlePay.
+   * Tests the checkout process with Turtlecoin.
    *
    * @throws \Behat\Mink\Exception\ResponseTextException
    * @throws \Behat\Mink\Exception\ResponseTextException
    * @throws \Drupal\Core\Entity\EntityMalformedException
    * @throws \Drupal\Core\TypedData\Exception\MissingDataException
    */
-  public function testTurtlePayCheckout() {
+  public function testTurtlecoinCheckout() {
+    $this->assertEquals(0, $this->queue->numberOfItems());
+
     // Add to cart.
     $this->drupalGet($this->product->toUrl());
     $this->submitForm([], 'Add to cart');
@@ -117,31 +135,44 @@ class TurtlePayTest extends CommerceBrowserTestBase {
     $this->assertCheckoutProgressStep('Review');
     $this->assertSession()->pageTextContains('Review');
     $this->assertSession()->pageTextContains('Payment information');
-    $this->assertSession()->pageTextContains('TurtlePay');
+    $this->assertSession()->pageTextContains('Turtlecoin');
     $this->submitForm([], 'Pay and complete purchase');
 
     // Assert payment instructions.
     $this->assertSession()->pageTextContains('Please transfer the amount of 10525.43 TRTL to TRTL');
-    $this->assertSession()->pageTextContains('Warning: This address will only be active for about 120 Blocks (2h)');
+    $this->assertSession()->pageTextContains('Warning: This address will only be active for about 120 Blocks (1h)');
 
     // Assert some order values.
     $order = Order::load(1);
     $this->assertEquals('completed', $order->getState()->getId());
     $this->assertEquals('complete', $order->get('checkout_step')->first()->getValue()['value']);
-    $this->assertEquals('turtlepay_payment_gateway', $order->get('payment_gateway')->entity->getPluginId());
+    $this->assertEquals('turtlecoin_payment_gateway', $order->get('payment_gateway')->entity->getPluginId());
     $this->assertEquals(new Price(1, 'USD'), $order->getTotalPrice());
 
     // Validate the created payment.
     $payment = Payment::load(1);
     $this->assertEquals(new Price(10525.43, 'TRT'), $payment->getAmount());
-    $turtlepay_response = $payment->get('turtlepay_checkout_response')->value;
-    $turtlepay_response = Json::decode($turtlepay_response);
-    $this->assertNotEmpty($turtlepay_response, 'No response from TurtlePay.');
+    $block_index = $payment->get('turtle_coin_block_index')->value;
+    $this->assertEquals('455956', $block_index);
     $this->assertEquals('pending', $payment->getState()->getId());
 
     // Validate the address.
-    $this->assertTrue(TurtleCoinService::validate($payment->getRemoteId()), 'TurtleCoin sendTo address is not valid.');
-    $this->assertSession()->pageTextContains($payment->getRemoteId());
+    $address = $payment->get('turtle_coin_integrated_address')->value;
+    $this->assertTrue(TurtleCoinService::validate($address), 'TurtleCoin sendTo address is not valid.');
+    $this->assertSession()->pageTextContains($address);
+
+    // Check the added queue item.
+    $this->assertEquals(1, $this->queue->numberOfItems());
+    $item = $this->queue->claimItem();
+    $this->assertNotEmpty($item);
+    $this->assertEquals('TRTLuxN6FVALYxeAEKhtWDYNS9Vd9dHVp3QHwjKbo76ggQKgUfVjQp8iPypECCy3MwZVyu89k1fWE2Ji6EKedbrqECHHWouZN6g', $item->data->turtlecoin_address_store);
+    $this->assertEquals('http://localhost', $item->data->wallet_api_host);
+    $this->assertEquals('8070', $item->data->wallet_api_port);
+    $this->assertEquals('password', $item->data->wallet_api_password);
+    $this->assertEquals(3600, $item->data->wait_for_transactions_time);
+    $this->assertEquals('455956', $item->data->firstBlockIndex);
+    $this->assertEquals(100, $item->data->blockCount);
+    $this->assertEquals('debug', $item->data->mode);
   }
 
   /**
