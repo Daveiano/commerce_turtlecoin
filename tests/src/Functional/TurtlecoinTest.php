@@ -6,16 +6,9 @@ use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_payment\Entity\Payment;
 use Drupal\commerce_payment\Entity\PaymentGateway;
 use Drupal\commerce_price\Price;
-use Drupal\Component\Serialization\Json;
 use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
 use Drupal\commerce_turtlecoin\TurtleCoinService;
 use Drupal\Tests\commerce_turtlecoin\Traits\CommerceTurtlecoinOrderDataTrait;
-use GuzzleHttp\MessageFormatter;
-use Namshi\Cuzzle\Middleware\CurlFormatterMiddleware;
-use Concat\Http\Middleware\Logger;
-use Psr\Log\LogLevel;
-use Symfony\Component\Console\Logger\ConsoleLogger;
-use Symfony\Component\Console\Output\ConsoleOutput;
 
 /**
  * Tests turtlecoin checkout and payment workflow.
@@ -71,7 +64,6 @@ class TurtlecoinTest extends CommerceBrowserTestBase {
    * @var \Drupal\Core\Queue\QueueInterface
    */
   protected $queue;
-
 
   /**
    * {@inheritdoc}
@@ -165,8 +157,8 @@ class TurtlecoinTest extends CommerceBrowserTestBase {
     $this->assertEquals(1, $this->queue->numberOfItems());
     $item = $this->queue->claimItem();
     $this->assertNotEmpty($item);
-    $this->assertEquals('TRTLuxN6FVALYxeAEKhtWDYNS9Vd9dHVp3QHwjKbo76ggQKgUfVjQp8iPypECCy3MwZVyu89k1fWE2Ji6EKedbrqECHHWouZN6g', $item->data->turtlecoin_address_store);
-    $this->assertEquals('http://localhost', $item->data->wallet_api_host);
+    $this->assertEquals('TRTLuxCSbSf4jFwi9rG8k4Gxd5H4wZ5NKPq4xmX72TpXRrAf4V6Ykr81MVYSaqVMdkA5qYkrrjZFZGNR8XPK8WqsSfcfU4RHhVM', $item->data->turtlecoin_address_store);
+    $this->assertEquals('127.0.0.1', $item->data->wallet_api_host);
     $this->assertEquals('8070', $item->data->wallet_api_port);
     $this->assertEquals('password', $item->data->wallet_api_password);
     $this->assertEquals(3600, $item->data->wait_for_transactions_time);

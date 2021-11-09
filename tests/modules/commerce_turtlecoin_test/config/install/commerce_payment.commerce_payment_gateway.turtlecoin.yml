@@ -8,8 +8,8 @@ label: TurtleCoin
 weight: null
 plugin: turtlecoin_payment_gateway
 configuration:
-  turtlecoin_address_store: TRTLuxN6FVALYxeAEKhtWDYNS9Vd9dHVp3QHwjKbo76ggQKgUfVjQp8iPypECCy3MwZVyu89k1fWE2Ji6EKedbrqECHHWouZN6g
-  wallet_api_host: 'http://localhost'
+  turtlecoin_address_store: TRTLuxCSbSf4jFwi9rG8k4Gxd5H4wZ5NKPq4xmX72TpXRrAf4V6Ykr81MVYSaqVMdkA5qYkrrjZFZGNR8XPK8WqsSfcfU4RHhVM
+  wallet_api_host: '127.0.0.1'
   wallet_api_port: '8070'
   wallet_api_password: password
   wait_for_transactions_time: 3600

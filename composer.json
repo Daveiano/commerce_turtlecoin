@@ -18,7 +18,6 @@
     "drupal/commerce": "^2.15",
     "drupal/commerce_currency_resolver": "^1",
     "drupal/commerce_exchanger_cryptocompare": "^1",
-    "turtlecoin/turtlecoin-rpc-php": "^2.1",
     "ext-openssl": "*"
   }
 }

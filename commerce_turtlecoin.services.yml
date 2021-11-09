@@ -2,3 +2,7 @@ services:
   commerce_turtlecoin.turtle_coin_service:
     class: Drupal\commerce_turtlecoin\TurtleCoinService
     arguments: []
+
+  commerce_turtlecoin.turtle_coin_wallet_api_service:
+    class: Drupal\commerce_turtlecoin\TurtleCoinWalletApiService
+    arguments: ['@http_client']

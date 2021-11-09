@@ -6,10 +6,9 @@ use Drupal\Component\Serialization\Json;
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
 
 /**
- * Guzzle middleware for the OMDb API.
+ * Guzzle middleware for the wallet-api tests.
  */
 class TurtleRPCMiddleware {
 
@@ -21,8 +20,8 @@ class TurtleRPCMiddleware {
       return function (RequestInterface $request, array $options) use ($handler) {
         $uri = $request->getUri();
 
-        // API requests to OMDb.
-        if ($uri->getPath() === '/json_rpc') {
+        // Wallet-api requests.
+        if ($uri->getHost() === '127.0.0.1' && $uri->getPort() === 8070) {
           return $this->createPromise($request);
         }
 
@@ -33,38 +32,27 @@ class TurtleRPCMiddleware {
   }
 
   /**
-   * Creates a promise for the OMDb request.
+   * Creates a promise for the wallet-api request.
    *
    * @param RequestInterface $request
    *
    * @return \GuzzleHttp\Promise\PromiseInterface
    */
   protected function createPromise(RequestInterface $request) {
-    $data = Json::decode($request->getBody()->getContents());
-
     $response_data = [];
 
-    switch ($data['method']) {
-      case 'createIntegratedAddress':
+    switch ($request->getUri()->getPath()) {
+      case strpos($request->getUri()->getPath(), '/addresses/TRTLuxCSbSf4jFwi9rG8k4Gxd5H4wZ5NKPq4xmX72TpXRrAf4V6Ykr81MVYSaqVMdkA5qYkrrjZFZGNR8XPK8WqsSfcfU4RHhVM/') !== FALSE:
         $response_data = [
-          "id" => 1,
-          "jsonrpc" => "2.0",
-          "result" => [
-            "integratedAddress" => "TRTLuxiNXhy96RNDkv2jx29jL7GdTWYBmA4r7K8KRpDWA4hJJnTZEgFHFzxqvmBLtz94oF4uPokQdHbV9j2g7S6LA4hKPvjZEFS2CiAj6DL8isYELmTec8Z9BK56oL1KMhjMRSMyfwYaogKg17hQKC23CHPBcHqrHHGzdRYUk3HGqkMwXbHg3BoCpXD",
-          ],
+          "integratedAddress" => "TRTLuxiNXhy96RNDkv2jx29jL7GdTWYBmA4r7K8KRpDWA4hJJnTZEgFHFzxqvmBLtz94oF4uPokQdHbV9j2g7S6LA4hKPvjZEFS2CiAj6DL8isYELmTec8Z9BK56oL1KMhjMRSMyfwYaogKg17hQKC23CHPBcHqrHHGzdRYUk3HGqkMwXbHg3BoCpXD",
         ];
         break;
 
-      case 'getStatus':
+      case '/status':
         $response_data = [
-          "id" => 1,
-          "jsonrpc" => "2.0",
-          "result" => [
-            "blockCount" => "455956",
-            "knownBlockCount" => "455956",
-            "lastBlockHash" => "ABC",
-            "peerCount" => 8,
-          ],
+          "networkBlockCount" => "455956",
+          "localDaemonBlockCount" => "455956",
+          "peerCount" => 8,
         ];
         break;
     }

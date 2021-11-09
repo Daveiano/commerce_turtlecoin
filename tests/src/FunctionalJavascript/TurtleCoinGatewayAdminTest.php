@@ -17,7 +17,10 @@ class TurtleCoinGatewayAdminTest extends CommerceWebDriverTestBase {
    *
    * @var array
    */
-  public static $modules = ['commerce_turtlecoin'];
+  public static $modules = [
+    'commerce_turtlecoin',
+    'commerce_turtlecoin_test',
+  ];
 
   /**
    * The theme to use.
@@ -56,7 +59,7 @@ class TurtleCoinGatewayAdminTest extends CommerceWebDriverTestBase {
   public function testTurtleCoinGatewayAdd() {
     $this->drupalGet('admin/commerce/config/payment-gateways/add');
 
-    $this->getSession()->getPage()->fillField('edit-label', 'TurtleCoin');
+    $this->getSession()->getPage()->fillField('edit-label', 'TurtleCoinManualAdded');
     $this->getSession()->getPage()->selectFieldOption('edit-plugin-turtlecoin-payment-gateway', 'turtlecoin_payment_gateway', FALSE);
 
     $this->assertSession()->assertWaitOnAjaxRequest();
@@ -68,14 +71,15 @@ class TurtleCoinGatewayAdminTest extends CommerceWebDriverTestBase {
 
     $this->getSession()->getPage()->pressButton('Save');
 
-    $this->assertSession()->pageTextContains('Saved the TurtleCoin payment gateway.');
-    // We also assert that there is no connection to wallet, but the status
-    // should be shown correct.
-    $this->assertSession()->pageTextContains('Could not connect to daemon:');
+    $this->assertSession()->pageTextContains('Saved the TurtleCoinManualAdded payment gateway.');
+    $this->assertSession()->pageTextContains('You are connected!');
+    $this->assertSession()->pageTextContains('Network block count: 455956');
+    $this->assertSession()->pageTextContains('Your nodes block count: 455956');
+    $this->assertSession()->pageTextContains('Connected peers: 8');
 
-    $payment_gateway = PaymentGateway::load('turtlecoin');
-    $this->assertEquals('turtlecoin', $payment_gateway->id());
-    $this->assertEquals('TurtleCoin', $payment_gateway->label());
+    $payment_gateway = PaymentGateway::load('turtlecoinmanualadded');
+    $this->assertEquals('turtlecoinmanualadded', $payment_gateway->id());
+    $this->assertEquals('TurtleCoinManualAdded', $payment_gateway->label());
     $this->assertEquals('turtlecoin_payment_gateway', $payment_gateway->getPluginId());
     $this->assertEquals(TRUE, $payment_gateway->status());
 

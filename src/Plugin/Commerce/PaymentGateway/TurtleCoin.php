@@ -6,6 +6,7 @@ use Drupal\commerce_exchanger\ExchangerCalculatorInterface;
 use Drupal\commerce_payment\PaymentMethodTypeManager;
 use Drupal\commerce_payment\PaymentTypeManager;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\PaymentGatewayBase;
+use Drupal\commerce_price\MinorUnitsConverterInterface;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -13,6 +14,7 @@ use Drupal\commerce_payment\Entity\PaymentInterface;
 use Drupal\commerce_price\Price;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use TurtleCoin\TurtleService;
+use Drupal\commerce_turtlecoin\TurtleCoinWalletApiService;
 use Drupal\commerce_turtlecoin\TurtleCoinService;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ConnectException;
@@ -43,13 +45,6 @@ use Drupal\commerce_payment\Exception\InvalidResponseException;
 class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
 
   /**
-   * The Turtle service.
-   *
-   * @var \TurtleCoin\TurtleService
-   */
-  protected $turtleService;
-
-  /**
    * The Turtle Coin service.
    *
    * @var \Drupal\commerce_turtlecoin\TurtleCoinService
@@ -57,11 +52,25 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
   protected $turtleCoinService;
 
   /**
+   * Wallet API.
+   *
+   * @var \Drupal\commerce_turtlecoin\TurtleCoinWalletApiService
+   */
+  protected $turtleCoinWalletApi;
+
+  /**
    * Price Calculator.
    *
    * @var \Drupal\commerce_exchanger\ExchangerCalculatorInterface
    */
   protected $calculator;
+
+  /**
+   * The Turtle service.
+   *
+   * @var \TurtleCoin\TurtleService
+   */
+  protected $turtleService;
 
   /**
    * {@inheritdoc}
@@ -75,7 +84,9 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
       $container->get('plugin.manager.commerce_payment_type'),
       $container->get('plugin.manager.commerce_payment_method_type'),
       $container->get('datetime.time'),
+      $container->get('commerce_price.minor_units_converter'),
       $container->get('commerce_turtlecoin.turtle_coin_service'),
+      $container->get('commerce_turtlecoin.turtle_coin_wallet_api_service'),
       $container->get('commerce_currency_resolver.calculator')
     );
   }
@@ -83,21 +94,21 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time, TurtleCoinService $turtle_coin_service, ExchangerCalculatorInterface $calculator) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager, $time);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time, MinorUnitsConverterInterface $minor_units_converter, TurtleCoinService $turtle_coin_service, TurtleCoinWalletApiService $wallet_api, ExchangerCalculatorInterface $calculator) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager, $time, $minor_units_converter);
 
-    $config = [
+    $this->turtleCoinService = $turtle_coin_service;
+    $this->turtleCoinWalletApi = $wallet_api;
+    $this->calculator = $calculator;
+
+    $configTurtleService = [
       'rpcHost' => $this->getConfiguration()['wallet_api_host'],
       'rpcPort' => $this->getConfiguration()['wallet_api_port'],
       'rpcPassword' => $this->getConfiguration()['wallet_api_password'],
       'handler' => \Drupal::httpClient()->getConfig()['handler'],
     ];
 
-    $test = $_SERVER;
-
-    $this->turtleService = new TurtleService($config);
-    $this->turtleCoinService = $turtle_coin_service;
-    $this->calculator = $calculator;
+    $this->turtleService = new TurtleService($configTurtleService);
   }
 
   /**
@@ -107,20 +118,20 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
    */
   protected function showDaemonStatus() {
     try {
-      $response = $this->turtleService->getStatus()->toArray();
+      $response = $this->turtleCoinWalletApi->status()->toArray();
       $message = t('<b>You are connected!</b> <br/> Network block count: %network_block_count <br/> Your nodes block count: %block_count <br/> Connected peers: %peers', [
-        '%network_block_count' => $response['result']['knownBlockCount'],
-        '%block_count' => $response['result']['blockCount'],
-        '%peers' => $response['result']['peerCount'],
+        '%network_block_count' => $response['networkBlockCount'],
+        '%block_count' => $response["localDaemonBlockCount"],
+        '%peers' => $response['peerCount'],
       ]);
 
       \Drupal::messenger()->addMessage($message, 'status');
     }
-    catch (RequestException $requestException) {
-      \Drupal::messenger()->addMessage(t('Could not connect to daemon: %message', ['%message' => $requestException->getMessage()]), 'error');
-    }
     catch (ConnectException $connectException) {
-      \Drupal::messenger()->addMessage(t('Could not connect to daemon: %message', ['%message' => $connectException->getMessage()]), 'error');
+      \Drupal::messenger()->addMessage(t('Could not connect to wallet-api: %message', ['%message' => $connectException->getMessage()]), 'error');
+    }
+    catch (RequestException $requestException) {
+      \Drupal::messenger()->addMessage(t('Could not connect to wallet-api: %message', ['%message' => $requestException->getMessage()]), 'error');
     }
   }
 
@@ -273,17 +284,17 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
     try {
       $turtlecoin_payment_id = $this->turtleCoinService->createPaymentId();
 
-      $integrated_address = $this->turtleService->createIntegratedAddress(
+      $integrated_address = $this->turtleCoinWalletApi->createIntegratedAddress(
         $this->getConfiguration()['turtlecoin_address_store'],
         $turtlecoin_payment_id
       )->toArray();
 
       // Add the integrated address to the payment.
-      $payment->turtle_coin_integrated_address = $integrated_address['result']['integratedAddress'];
+      $payment->turtle_coin_integrated_address = $integrated_address['integratedAddress'];
 
       // Get the current block index and save it to the transaction.
-      $turtle_status = $this->turtleService->getStatus()->toArray();
-      $payment->turtle_coin_block_index = $turtle_status['result']['blockCount'];
+      $turtle_status = $this->turtleCoinWalletApi->status()->toArray();
+      $payment->turtle_coin_block_index = $turtle_status['networkBlockCount'];
 
       $payment->setRemoteId($turtlecoin_payment_id);
       $payment->state = $received ? 'completed' : 'pending';
@@ -298,7 +309,7 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
         'wallet_api_port' => $this->getConfiguration()['wallet_api_port'],
         'wallet_api_password' => $this->getConfiguration()['wallet_api_password'],
         'wait_for_transactions_time' => $this->getConfiguration()['wait_for_transactions_time'],
-        'firstBlockIndex' => $turtle_status['result']['blockCount'],
+        'firstBlockIndex' => $turtle_status['networkBlockCount'],
         'blockCount' => 100,
         'paymentId' => $turtlecoin_payment_id,
         'mode' => $this->getConfiguration()['mode'],
