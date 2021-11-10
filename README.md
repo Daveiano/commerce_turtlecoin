@@ -68,7 +68,11 @@ You need also to start the wallet-api:
 
 `./wallet-api --port 8070 --rpc-password password`
 
-## TODO: Does the zedwallet needs to be open? See https://docs.turtlecoin.lol/guides/wallets/using-zedwallet
+The payment gateway needs to be able to open a wallet for accessing the
+wallet-api. Please specify your wallet along with the damon settings in the
+setting.php like this:
+
+### TODO Settings.php
 
 **Warning:** Change the passwords for production.
 

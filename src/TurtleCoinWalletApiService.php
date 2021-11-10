@@ -125,7 +125,7 @@ class TurtleCoinWalletApiService {
         break;
 
       case 'getTransactions':
-        $rpcUri = $this->getRpcUri() . "/address/" . $params['address'] . '/' . $params['startHeight'];
+        $rpcUri = $this->getRpcUri() . "/transactions/address/" . $params['address'] . '/' . $params['startHeight'];
         break;
     }
 

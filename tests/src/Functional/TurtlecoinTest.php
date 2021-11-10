@@ -163,7 +163,6 @@ class TurtlecoinTest extends CommerceBrowserTestBase {
     $this->assertEquals('password', $item->data->wallet_api_password);
     $this->assertEquals(3600, $item->data->wait_for_transactions_time);
     $this->assertEquals('455956', $item->data->firstBlockIndex);
-    $this->assertEquals(100, $item->data->blockCount);
     $this->assertEquals('debug', $item->data->mode);
   }
 

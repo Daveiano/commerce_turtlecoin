@@ -293,7 +293,6 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
         'wallet_api_password' => $this->getConfiguration()['wallet_api_password'],
         'wait_for_transactions_time' => $this->getConfiguration()['wait_for_transactions_time'],
         'firstBlockIndex' => $turtle_status['networkBlockCount'],
-        'blockCount' => 100,
         'paymentId' => $turtlecoin_payment_id,
         'mode' => $this->getConfiguration()['mode'],
       ];

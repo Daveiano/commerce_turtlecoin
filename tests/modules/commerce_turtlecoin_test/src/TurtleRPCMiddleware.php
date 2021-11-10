@@ -48,6 +48,36 @@ class TurtleRPCMiddleware {
         ];
         break;
 
+      // @see \Drupal\Tests\commerce_turtlecoin\Kernel\TurtlecoinPaymentProcessingTest::testPaymentComplete
+      case '/transactions/address/TRTLuxCSbSf4jFwi9rG8k4Gxd5H4wZ5NKPq4xmX72TpXRrAf4V6Ykr81MVYSaqVMdkA5qYkrrjZFZGNR8XPK8WqsSfcfU4RHhVM/1000':
+        $response_data = [
+          "transactions" => [
+            [
+              "transfers" => [
+                  [
+                    "address" => "TRTLuxCSbSf4jFwi9rG8k4Gxd5H4wZ5NKPq4xmX72TpXRrAf4V6Ykr81MVYSaqVMdkA5qYkrrjZFZGNR8XPK8WqsSfcfU4RHhVM",
+                    "amount" => 513480,
+                  ],
+              ],
+              "hash" => "f470547c88e209052a2e97df5f6ea9be2fbf2973605abb0f2dff922f33a8905c",
+              "fee" => 5000,
+              "blockHeight" => 4096780,
+              "timestamp" => 1636503641,
+              "paymentID" => "0aa63a0044724e208fd15a55c44689b98fd7063257f66bedf781fd826f514f5e",
+              "unlockTime" => 0,
+              "isCoinbaseTransaction" => FALSE,
+            ],
+          ],
+        ];
+        break;
+
+      // @see \Drupal\Tests\commerce_turtlecoin\Kernel\TurtlecoinPaymentProcessingTest::testPaymentVoid
+      case '/transactions/address/TRTLuxCSbSf4jFwi9rG8k4Gxd5H4wZ5NKPq4xmX72TpXRrAf4V6Ykr81MVYSaqVMdkA5qYkrrjZFZGNR8XPK8WqsSfcfU4RHhVM/1500':
+        $response_data = [
+          "transactions" => [],
+        ];
+        break;
+
       case '/status':
         $response_data = [
           "networkBlockCount" => "455956",

@@ -7,7 +7,6 @@ use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\commerce_payment\PaymentStorageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use TurtleCoin\TurtleService;
 use GuzzleHttp\Exception\ConnectException;
 
 /**
@@ -69,43 +68,34 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
       ]);
     }
 
+    // Load the commerce_payment for amount comparing.
+    $payment = $this->paymentStorage->loadByRemoteId($item->paymentId);
+
     // Search for the given transaction.
     try {
       $transactions_response = $this->turtleCoinWalletApi->getTransactions(
-        $item->blockCount,
-        $item->firstBlockIndex,
-        NULL,
-        [$item->turtlecoin_address_store],
-        $item->paymentId
+        $item->turtlecoin_address_store,
+        $item->firstBlockIndex
       )->toArray();
 
       // Get current block count for comparing max allowed wait time.
       $turtle_status = $this->turtleCoinWalletApi->status()->toArray();
-      // Load the commerce_payment for amount comparing.
-      $payment = $this->paymentStorage->loadByRemoteId($item->paymentId);
 
-      if (count($transactions_response['result']['items']) > 0) {
-        foreach ($transactions_response['result']['items'] as $transactions) {
-          if (count($transactions['transactions']) > 0) {
-            foreach ($transactions['transactions'] as $transaction) {
-              if (($transaction['paymentId'] === $item->paymentId) && (floatval($transaction['amount']) === floatval(($payment->getAmount()->getNumber()) * 100))) {
-                $tx_hash = $transaction['transactionHash'];
+      if (count($transactions_response) > 0) {
+        foreach ($transactions_response['transactions'] as $transaction) {
+          if (($transaction['paymentID'] === $item->paymentId) && (floatval($transaction['transfers'][0]['amount']) >= floatval(($payment->getAmount()->getNumber()) * 100))) {
+            $tx_hash = $transaction['hash'];
 
-                return $this->completeTransaction($item->paymentId, $tx_hash);
-              }
-            }
+            return $this->completeTransaction($item->paymentId, $tx_hash);
           }
         }
+      }
 
-        // No transaction found, proceed.
-        return $this->checkIfTransactionOutdated($item, $turtle_status);
-      }
-      else {
-        return $this->checkIfTransactionOutdated($item, $turtle_status);
-      }
+      // No transaction found, proceed.
+      return $this->checkIfTransactionOutdated($item, $turtle_status);
     }
     catch (ConnectException $connectException) {
-      \Drupal::logger('commerce_turtlecoin')->error('Could not connect to Wallet RPC API: @error.', [
+      \Drupal::logger('commerce_turtlecoin')->error('Could not connect to Wallet API: @error.', [
         '@error' => $connectException->getMessage(),
       ]);
     }
@@ -126,7 +116,7 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function checkIfTransactionOutdated($item, array $turtle_status) {
+  public function checkIfTransactionOutdated($item, array $turtle_status): ?string {
     $transaction_wait_time = $item->wait_for_transactions_time;
     $transaction_wait_block_time = $transaction_wait_time / 30;
 
@@ -141,6 +131,8 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
   /**
    * Set a given payment to state 'complete'.
    *
+   * @todo Update orders paid amount.
+   *
    * @param string $payment_id
    *   PaymentId of transaction to process.
    * @param string $tx_hash
@@ -152,7 +144,7 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
    * @throws \Drupal\Core\Entity\EntityStorageException
    *   In case of failures an exception is thrown.
    */
-  public function completeTransaction($payment_id, $tx_hash) {
+  public function completeTransaction(string $payment_id, string $tx_hash): string {
     $payment = $this->paymentStorage->loadByRemoteId($payment_id);
     $payment->setState('completed');
     $payment->turtle_coin_tx_hash = $tx_hash;
@@ -173,7 +165,7 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
    * @throws \Drupal\Core\Entity\EntityStorageException
    *   In case of failures an exception is thrown.
    */
-  public function voidTransaction($payment_id) {
+  public function voidTransaction(string $payment_id): string {
     $payment = $this->paymentStorage->loadByRemoteId($payment_id);
     $payment->setState('voided');
     $payment->save();

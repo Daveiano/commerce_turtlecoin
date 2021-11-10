@@ -61,7 +61,7 @@ function commerce_turtlecoin_cron() {
         }
       }
       catch (SuspendQueueException $e) {
-        // If there was an Exception trown because of an error
+        // If there was an Exception thrown because of an error
         // Releases the item that the worker could not process.
         // Another worker can come and process it.
         $queue->releaseItem($item);
@@ -70,7 +70,7 @@ function commerce_turtlecoin_cron() {
     }
   }
 
-  // Finally release the not yet finished transactions.
+  // Finally, release the not yet finished transactions.
   foreach ($items_to_release as $item) {
     $queue->releaseItem($item);
   }
