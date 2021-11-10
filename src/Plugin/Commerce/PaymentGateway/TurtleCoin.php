@@ -13,7 +13,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\commerce_payment\Entity\PaymentInterface;
 use Drupal\commerce_price\Price;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use TurtleCoin\TurtleService;
 use Drupal\commerce_turtlecoin\TurtleCoinWalletApiService;
 use Drupal\commerce_turtlecoin\TurtleCoinService;
 use GuzzleHttp\Exception\RequestException;
@@ -66,13 +65,6 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
   protected $calculator;
 
   /**
-   * The Turtle service.
-   *
-   * @var \TurtleCoin\TurtleService
-   */
-  protected $turtleService;
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -100,15 +92,6 @@ class TurtleCoin extends PaymentGatewayBase implements TurtleCoinInterface {
     $this->turtleCoinService = $turtle_coin_service;
     $this->turtleCoinWalletApi = $wallet_api;
     $this->calculator = $calculator;
-
-    $configTurtleService = [
-      'rpcHost' => $this->getConfiguration()['wallet_api_host'],
-      'rpcPort' => $this->getConfiguration()['wallet_api_port'],
-      'rpcPassword' => $this->getConfiguration()['wallet_api_password'],
-      'handler' => \Drupal::httpClient()->getConfig()['handler'],
-    ];
-
-    $this->turtleService = new TurtleService($configTurtleService);
   }
 
   /**

@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_turtlecoin\Plugin\QueueWorker;
 
+use Drupal\commerce_turtlecoin\TurtleCoinWalletApiService;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\commerce_payment\PaymentStorageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -27,12 +28,20 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
   protected $paymentStorage;
 
   /**
+   * Wallet API.
+   *
+   * @var \Drupal\commerce_turtlecoin\TurtleCoinWalletApiService
+   */
+  protected $turtleCoinWalletApi;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, PaymentStorageInterface $payment_storage) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, PaymentStorageInterface $payment_storage, TurtleCoinWalletApiService $wallet_api) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->paymentStorage = $payment_storage;
+    $this->turtleCoinWalletApi = $wallet_api;
   }
 
   /**
@@ -43,7 +52,8 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('entity_type.manager')->getStorage('commerce_payment')
+      $container->get('entity_type.manager')->getStorage('commerce_payment'),
+      $container->get('commerce_turtlecoin.turtle_coin_wallet_api_service')
     );
   }
 
@@ -59,18 +69,9 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
       ]);
     }
 
-    // Create a new turtle-service instance.
-    $config = [
-      'rpcHost' => $item->wallet_api_host,
-      'rpcPort' => $item->wallet_api_port,
-      'rpcPassword' => $item->wallet_api_password,
-    ];
-
-    $turtleService = new TurtleService($config);
-
     // Search for the given transaction.
     try {
-      $transactions_response = $turtleService->getTransactions(
+      $transactions_response = $this->turtleCoinWalletApi->getTransactions(
         $item->blockCount,
         $item->firstBlockIndex,
         NULL,
@@ -79,7 +80,7 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
       )->toArray();
 
       // Get current block count for comparing max allowed wait time.
-      $turtle_status = $turtleService->getStatus()->toArray();
+      $turtle_status = $this->turtleCoinWalletApi->status()->toArray();
       // Load the commerce_payment for amount comparing.
       $payment = $this->paymentStorage->loadByRemoteId($item->paymentId);
 
@@ -118,7 +119,7 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
    * @param object $item
    *   The queue worker item.
    * @param array $turtle_status
-   *   Response from $turtleService->getStatus()->toArray().
+   *   Response from $turtleService->status()->toArray().
    *
    * @return string|null
    *   Returns NULL if transaction is still active, 'voided' if not.
@@ -129,7 +130,7 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
     $transaction_wait_time = $item->wait_for_transactions_time;
     $transaction_wait_block_time = $transaction_wait_time / 30;
 
-    if ($turtle_status['result']['blockCount'] > (intval($item->firstBlockIndex) + intval($transaction_wait_block_time))) {
+    if ($turtle_status['networkBlockCount'] > (intval($item->firstBlockIndex) + intval($transaction_wait_block_time))) {
       return $this->voidTransaction($item->paymentId);
     }
     else {

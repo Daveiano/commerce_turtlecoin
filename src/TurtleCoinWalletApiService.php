@@ -6,7 +6,6 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
-use Symfony\Component\HttpFoundation\File\Exception\AccessDeniedException;
 use TurtleCoin\Http\JsonResponse;
 
 class TurtleCoinWalletApiService {
@@ -108,6 +107,13 @@ class TurtleCoinWalletApiService {
     ]);
   }
 
+  public function getTransactions(string $address, int $start_height) {
+    return $this->rpcGet('getTransactions', [
+      'address' => $address,
+      'startHeight' => $start_height,
+    ]);
+  }
+
   public function rpcGet(string $method, array $params = []):JsonResponse {
     switch ($method) {
       case 'status':
@@ -116,6 +122,10 @@ class TurtleCoinWalletApiService {
 
       case 'createIntegratedAddress':
         $rpcUri = $this->getRpcUri() . "/addresses/" . $params['address'] . '/' . $params['paymentId'];
+        break;
+
+      case 'getTransactions':
+        $rpcUri = $this->getRpcUri() . "/address/" . $params['address'] . '/' . $params['startHeight'];
         break;
     }
 
