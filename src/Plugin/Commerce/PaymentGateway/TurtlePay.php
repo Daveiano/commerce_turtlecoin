@@ -140,8 +140,6 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
 
   /**
    * {@inheritdoc}
-   *
-   * @todo Validate turtlecoin_private_view_key.
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::validateConfigurationForm($form, $form_state);
@@ -234,12 +232,9 @@ class TurtlePay extends PaymentGatewayBase implements TurtlePayInterface {
 
     // Generate a secret and unique string for the callback url.
     $secret = Crypt::randomBytesBase64(96);
-    // @todo floatVal and intVal?
     $payment_amount = floatval($payment->getAmount()->multiply(100)->getNumber());
 
     $data = Json::encode([
-      // @todo PHP 7.1 does strange things with the numbers?
-      // @todo The privateViewKey is a new requirement?
       // @see https://docs.turtlepay.io/api/
       'amount' => intval($payment_amount),
       'address' => $this->getConfiguration()['turtlecoin_address_store'],

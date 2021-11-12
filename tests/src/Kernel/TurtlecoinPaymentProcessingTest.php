@@ -22,8 +22,8 @@ class TurtlecoinPaymentProcessingTest extends OrderKernelTestBase {
    */
   public static $modules = [
     'commerce_payment',
-    'commerce_exchanger',
     'commerce_exchanger_cryptocompare',
+    'commerce_exchanger',
     'commerce_currency_resolver',
     'commerce_turtlecoin',
     'commerce_turtlecoin_test',
@@ -51,21 +51,39 @@ class TurtlecoinPaymentProcessingTest extends OrderKernelTestBase {
 
     $this->installEntitySchema('commerce_payment');
     $this->installEntitySchema('commerce_payment_method');
-    $this->installConfig('commerce_payment');
-    $this->installConfig(['commerce_exchanger']);
+    $this->installEntitySchema('commerce_payment_gateway');
+    $this->installEntitySchema('commerce_exchange_rates');
+    $this->installEntitySchema('commerce_currency');
     $this->installConfig(['commerce_exchanger_cryptocompare']);
+    $this->installConfig(['commerce_exchanger', 'commerce_currency_resolver']);
+    $this->installConfig('commerce_payment');
     $this->installConfig(['commerce_turtlecoin']);
     $this->installConfig(['commerce_turtlecoin_test']);
+
+    $this->config('commerce_currency_resolver.settings')
+      ->set('currency_exchange_rates', 'cryptocompare')
+      ->set('currency_default', 'USD')
+      ->save();
+
+    $this->store->set('default_currency', 'USD');
+    $this->reloadEntity($this->store);
 
     $this->cron = $this->container->get('cron');
     $this->queue = $this->container->get('queue')->get('turtlecoin_payment_process_worker');
   }
 
+  /**
+   * Test that a payment completes when transaction is going in.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
   public function testPaymentComplete() {
     $payment = $this->createOrderWithPayment(1000);
+    $order = $payment->getOrder();
 
     $this->assertEquals('pending', $payment->getState()->getId());
     $this->assertEquals(0, $this->queue->numberOfItems());
+    $this->assertFalse($order->isPaid());
 
     $item = (object) [
       'turtlecoin_address_store' => "TRTLuxCSbSf4jFwi9rG8k4Gxd5H4wZ5NKPq4xmX72TpXRrAf4V6Ykr81MVYSaqVMdkA5qYkrrjZFZGNR8XPK8WqsSfcfU4RHhVM",
@@ -86,8 +104,14 @@ class TurtlecoinPaymentProcessingTest extends OrderKernelTestBase {
     $this->assertEquals(0, $this->queue->numberOfItems());
     $this->assertEquals('completed', $payment->getState()->getId());
     $this->assertEquals('f470547c88e209052a2e97df5f6ea9be2fbf2973605abb0f2dff922f33a8905c', $payment->get('turtle_coin_tx_hash')->value);
+    $this->assertTrue($order->isPaid());
   }
 
+  /**
+   * Test that a payment gets voided when no transaction is going in.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
   public function testPaymentVoid() {
     $payment = $this->createOrderWithPayment(1500);
 

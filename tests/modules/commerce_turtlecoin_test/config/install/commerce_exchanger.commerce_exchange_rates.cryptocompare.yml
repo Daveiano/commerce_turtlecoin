@@ -3,6 +3,9 @@ status: true
 dependencies:
   config:
     - commerce_exchanger.latest_exchange_rates.cryptocompare
+third_party_settings:
+  commerce_exchanger_cryptocompare:
+    currency_code_mapping: TRT|TRTL
 id: cryptocompare
 label: CryptoCompare
 plugin: crypto_compare

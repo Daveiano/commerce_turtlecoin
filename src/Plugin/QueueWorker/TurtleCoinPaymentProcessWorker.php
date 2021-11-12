@@ -2,7 +2,10 @@
 
 namespace Drupal\commerce_turtlecoin\Plugin\QueueWorker;
 
+use Drupal\commerce_exchanger\ExchangerCalculatorInterface;
 use Drupal\commerce_turtlecoin\TurtleCoinWalletApiService;
+use Drupal\Component\Datetime\Time;
+use Drupal\Core\Database\Database;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\commerce_payment\PaymentStorageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -34,13 +37,21 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
   protected $turtleCoinWalletApi;
 
   /**
+   * Price Calculator.
+   *
+   * @var \Drupal\commerce_exchanger\ExchangerCalculatorInterface
+   */
+  protected $calculator;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, PaymentStorageInterface $payment_storage, TurtleCoinWalletApiService $wallet_api) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, PaymentStorageInterface $payment_storage, TurtleCoinWalletApiService $wallet_api, ExchangerCalculatorInterface $calculator) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->paymentStorage = $payment_storage;
     $this->turtleCoinWalletApi = $wallet_api;
+    $this->calculator = $calculator;
   }
 
   /**
@@ -52,7 +63,8 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
       $plugin_id,
       $plugin_definition,
       $container->get('entity_type.manager')->getStorage('commerce_payment'),
-      $container->get('commerce_turtlecoin.turtle_coin_wallet_api_service')
+      $container->get('commerce_turtlecoin.turtle_coin_wallet_api_service'),
+      $container->get('commerce_exchanger.calculate')
     );
   }
 
@@ -131,8 +143,6 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
   /**
    * Set a given payment to state 'complete'.
    *
-   * @todo Update orders paid amount.
-   *
    * @param string $payment_id
    *   PaymentId of transaction to process.
    * @param string $tx_hash
@@ -146,9 +156,19 @@ class TurtleCoinPaymentProcessWorker extends QueueWorkerBase implements Containe
    */
   public function completeTransaction(string $payment_id, string $tx_hash): string {
     $payment = $this->paymentStorage->loadByRemoteId($payment_id);
+    $order = $payment->getOrder();
+
     $payment->setState('completed');
+    $payment->setCompletedTime(\Drupal::time()->getCurrentTime());
     $payment->turtle_coin_tx_hash = $tx_hash;
+    // Set all currencies back to the order currency to prevent
+    // mismatched currencies.
+    $payment->setAmount($order->getTotalPrice());
+    $payment->setRefundedAmount($this->calculator->priceConversion($payment->getRefundedAmount(), $order->getTotalPrice()->getCurrencyCode()));
     $payment->save();
+
+    // Update total paid on order.
+    $order->save();
 
     return 'completed';
   }

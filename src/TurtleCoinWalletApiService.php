@@ -2,12 +2,19 @@
 
 namespace Drupal\commerce_turtlecoin;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Site\Settings;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
 use TurtleCoin\Http\JsonResponse;
 
+/**
+ * Service to use Turtlecoin wallet-api.
+ *
+ * @see https://turtlecoin.github.io/wallet-api-docs/
+ */
 class TurtleCoinWalletApiService {
 
   /**
@@ -48,27 +55,38 @@ class TurtleCoinWalletApiService {
   /**
    * Constructs a new TurtleCoinWalletApiService.
    *
-   * @todo Init with settings.
-   *
    * @param \GuzzleHttp\Client $client
    *   The http client.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(Client $client) {
+  public function __construct(Client $client, EntityTypeManagerInterface $entity_type_manager) {
     $this->httpClient = $client;
 
-    // @todo dynamic.
-    // @todo Get daemon data from Settings and fallback to default if not set.
-    $this->config = [
+    $this->config = Settings::get('turtlecoin_wallet_config', [
       "daemonHost" => "127.0.0.1",
       "daemonPort" => 11898,
       "filename" => "mywallet.wallet",
-      "password" => "!3756861dBa",
+      "password" => "password",
+    ]);
+
+    /** @var \Drupal\commerce_payment\Entity\PaymentGateway $payment_gateway */
+    $payment_gateway = $entity_type_manager->getStorage('commerce_payment_gateway')->loadByProperties([
+      'plugin' => 'turtlecoin_payment_gateway',
+    ]);
+    $payment_gateway = reset($payment_gateway);
+    $payment_gateway_configuration = $payment_gateway ? $payment_gateway->getPluginConfiguration() : [
+      'wallet_api_host' => '127.0.0.1',
+      'wallet_api_port' => 8070,
+      'wallet_api_password' => 'password',
     ];
 
-    // @todo Get from payment gateway config.
-    $this->host = "127.0.0.1";
-    $this->port = 8070;
-    $this->apiKey = "password";
+    $this->host = $payment_gateway_configuration["wallet_api_host"];
+    $this->port = $payment_gateway_configuration["wallet_api_port"];
+    $this->apiKey = $payment_gateway_configuration["wallet_api_password"];
 
     // Initialize the wallet-api and open a wallet.
     try {
@@ -96,24 +114,63 @@ class TurtleCoinWalletApiService {
     }
   }
 
-  public function status() {
+  /**
+   * The /status request.
+   *
+   * @return \TurtleCoin\Http\JsonResponse
+   *   The response.
+   */
+  public function status(): JsonResponse {
     return $this->rpcGet('status');
   }
 
-  public function createIntegratedAddress(string $address, string $paymentId) {
+  /**
+   * The /addresses/{address}/{paymentID} request.
+   *
+   * @param string $address
+   *   The wallets address.
+   * @param string $paymentId
+   *   The payment id.
+   *
+   * @return \TurtleCoin\Http\JsonResponse
+   *   The response.
+   */
+  public function createIntegratedAddress(string $address, string $paymentId): JsonResponse {
     return $this->rpcGet('createIntegratedAddress', [
       'address' => $address,
       'paymentId' => $paymentId,
     ]);
   }
 
-  public function getTransactions(string $address, int $start_height) {
+  /**
+   * The /transactions/address/{address}/{startHeight} request.
+   *
+   * @param string $address
+   *   The wallets address.
+   * @param int $start_height
+   *   First block count to look for.
+   *
+   * @return \TurtleCoin\Http\JsonResponse
+   *   The response.
+   */
+  public function getTransactions(string $address, int $start_height): JsonResponse {
     return $this->rpcGet('getTransactions', [
       'address' => $address,
       'startHeight' => $start_height,
     ]);
   }
 
+  /**
+   * Get helper method.
+   *
+   * @param string $method
+   *   Method.
+   * @param array $params
+   *   Params.
+   *
+   * @return \TurtleCoin\Http\JsonResponse
+   *   The response.
+   */
   public function rpcGet(string $method, array $params = []):JsonResponse {
     switch ($method) {
       case 'status':
@@ -138,6 +195,17 @@ class TurtleCoinWalletApiService {
     return new JsonResponse($response);
   }
 
+  /**
+   * Post helper method.
+   *
+   * @param string $method
+   *   Method.
+   * @param array $params
+   *   Post body.
+   *
+   * @return \TurtleCoin\Http\JsonResponse
+   *   The response.
+   */
   public function rpcPost(string $method, array $params = []):JsonResponse {
     switch ($method) {
       case 'wallet_open':
@@ -155,7 +223,13 @@ class TurtleCoinWalletApiService {
     return new JsonResponse($response);
   }
 
-  public function getRpcUri() {
+  /**
+   * Get wallet-api uri.
+   *
+   * @return string
+   *   The wallet-api host and port.
+   */
+  public function getRpcUri(): string {
     return "$this->host:$this->port";
   }
 

@@ -34,9 +34,11 @@ class TurtleRPCMiddleware {
   /**
    * Creates a promise for the wallet-api request.
    *
-   * @param RequestInterface $request
+   * @param \Psr\Http\Message\RequestInterface $request
+   *   The incoming request.
    *
-   * @return \GuzzleHttp\Promise\PromiseInterface
+   * @return \GuzzleHttp\Promise\FulfilledPromise
+   *   Mocked promise.
    */
   protected function createPromise(RequestInterface $request) {
     $response_data = [];

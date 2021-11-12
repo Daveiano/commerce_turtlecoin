@@ -130,13 +130,17 @@ class TurtlePayResponsesTest extends OrderKernelTestBase {
    */
   public function testPaymentTransitionCompleted() {
     $payment = $this->createOrderWithPayment();
+    $order = $payment->getOrder();
+
     $this->assertEquals('pending', $payment->getState()->getId());
+    $this->assertFalse($order->isPaid());
 
     $response_body = $this->createTurtlePayResponseMockRequest($payment, 200);
 
     $this->assertEquals(['success' => TRUE], $response_body);
     $this->assertEquals('completed', $payment->getState()->getId());
     $this->assertEquals($this->finalTransactionHash, $payment->get('turtlepay_tx_hash')->getValue()[0]['value']);
+    $this->assertTrue($order->isPaid());
   }
 
   /**

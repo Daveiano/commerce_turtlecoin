@@ -72,7 +72,14 @@ The payment gateway needs to be able to open a wallet for accessing the
 wallet-api. Please specify your wallet along with the damon settings in the
 setting.php like this:
 
-### TODO Settings.php
+```
+$settings['turtlecoin_wallet_config'] = [
+  "daemonHost" => "127.0.0.1",
+  "daemonPort" => 11898,
+  "filename" => "mywallet.wallet",
+  "password" => "password",
+];
+```
 
 **Warning:** Change the passwords for production.
 

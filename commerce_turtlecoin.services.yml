@@ -5,4 +5,4 @@ services:
 
   commerce_turtlecoin.turtle_coin_wallet_api_service:
     class: Drupal\commerce_turtlecoin\TurtleCoinWalletApiService
-    arguments: ['@http_client']
+    arguments: ['@http_client', '@entity_type.manager']

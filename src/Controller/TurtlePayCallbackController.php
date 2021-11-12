@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_turtlecoin\Controller;
 
+use Drupal\commerce_exchanger\ExchangerCalculatorInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -25,10 +26,18 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
   protected $paymentStorage;
 
   /**
+   * Price Calculator.
+   *
+   * @var \Drupal\commerce_exchanger\ExchangerCalculatorInterface
+   */
+  protected $calculator;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(PaymentStorageInterface $payment_storage) {
+  public function __construct(PaymentStorageInterface $payment_storage, ExchangerCalculatorInterface $calculator) {
     $this->paymentStorage = $payment_storage;
+    $this->calculator = $calculator;
   }
 
   /**
@@ -36,7 +45,8 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity_type.manager')->getStorage('commerce_payment')
+      $container->get('entity_type.manager')->getStorage('commerce_payment'),
+      $container->get('commerce_exchanger.calculate')
     );
   }
 
@@ -54,6 +64,8 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
    *
    * @return \Symfony\Component\HttpFoundation\JsonResponse
    *   Simple json response to indicate the status of the information.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function postProcess($secret, $payment_id, Request $request) {
     // First check if there is a payment with the specified id and secret.
@@ -120,9 +132,19 @@ class TurtlePayCallbackController extends ControllerBase implements ContainerInj
         case 200:
           // sentFunds.
           // Called when we relay funds to the specified wallet.
+          $order = $payment->getOrder();
           $payment->setState('completed');
           $payment->turtlepay_tx_hash = $data['transactions'][0][0];
+
+          // Set all currencies back to the order currency to prevent
+          // mismatched currencies.
+          $payment->setAmount($order->getTotalPrice());
+          $payment->setRefundedAmount($this->calculator->priceConversion($payment->getRefundedAmount(), $order->getTotalPrice()->getCurrencyCode()));
           $payment->save();
+
+          // Update total paid on order.
+          $order->save();
+
           \Drupal::logger('commerce_turtlecoin')->notice('Payment completed! Payment ID: @payment_id.', [
             '@payment_id' => $payment_id,
           ]);
