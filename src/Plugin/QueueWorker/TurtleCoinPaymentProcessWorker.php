@@ -4,8 +4,6 @@ namespace Drupal\commerce_turtlecoin\Plugin\QueueWorker;
 
 use Drupal\commerce_exchanger\ExchangerCalculatorInterface;
 use Drupal\commerce_turtlecoin\TurtleCoinWalletApiService;
-use Drupal\Component\Datetime\Time;
-use Drupal\Core\Database\Database;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\commerce_payment\PaymentStorageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;

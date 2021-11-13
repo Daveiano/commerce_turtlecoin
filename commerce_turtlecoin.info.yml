@@ -6,4 +6,4 @@ core_version_requirement: ^8.8 || ^9
 dependencies:
   - commerce:commerce_payment (>=2.15)
   - commerce_currency_resolver:commerce_currency_resolver
-  - commerce_exchanger_cryptocompare:commerce_exchanger_cryptocompare
+  - commerce_exchanger_cryptocompare:commerce_exchanger_cryptocompare (>=2.1)
