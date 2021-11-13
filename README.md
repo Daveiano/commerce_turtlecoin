@@ -13,12 +13,12 @@ Issue Handling is done on Drupal.org:
 
 ## What this Modules does
 
-Commerce TurtleCoin is providing two (currently one, second is in development)
-Payment Gateways for paying with [TurtleCoin](https://turtlecoin.lol) in
+Commerce TurtleCoin is providing two Payment Gateways for paying with
+[TurtleCoin](https://turtlecoin.lol) in
 [Drupal Commerce](https://www.drupal.org/project/commerce).
 
 The first is an implementation with the
-[Wallet RPC API](https://api-docs.turtlecoin.lol/?php#wallet-rpc-api)
+[Wallet API](https://turtlecoin.github.io/wallet-api-docs/)
 to generate an integrated address on checkout and track the transaction
 to void it after a given time or complete it if the payment arrives.
 
@@ -27,14 +27,12 @@ to process the payment.
 
 <img align="center" alt="TurtlePay Payment Instructions" src="https://www.drupal.org/files/project-images/turtlepay-themed-payment-instructions.png">
 
-Included is also a submodule <code>Commerce TurtleCoin Currency on Checkout</code>, which uses <a href="https://www.drupal.org/project/commerce_currency_resolver">Commerce Currency Resolver</a> to change the order currency on checkout to TRTL if a Turtle Payment Gateway is used.
-
 You can enter the product prices in Euro or Dollar, an Exchange rate service for Commerce Currency Resolver is included which uses the <a href="https://min-api.cryptocompare.com/">CryptoCompare API</a> to calculate the TRTL price if necessary.
 
 ## Installation
 
 The gateway implemented with Wallet API needs a running and connected
-TurtleCoind and wallet-api service.
+TurtleCoind and wallet-api service running.
 
 See here:
 [https://github.com/turtlecoin/turtlecoin](https://github.com/turtlecoin/turtlecoin)
@@ -56,7 +54,7 @@ and the address of a public node.
 Note on security: using this option, while the most secure, requires you to run
 the Turtle-Service program on your server. Best practice for this is to use a
 view-only wallet since otherwise your server would be running a hot-wallet and
-a security breach could allow hackers to empty your funds.</blockquote>
+a security breach could allow hackers to empty your funds.
 </blockquote>
 
 This module includes a very basic config file for the TurtleCoin daemon,
