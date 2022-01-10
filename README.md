@@ -6,7 +6,14 @@
 Payment Gateway for Drupal Commerce to allow payments with
 [TurtleCoin](https://turtlecoin.lol).
 
-**Work in progress. Under active development.**
+**This project is obsolete and unsupported since TurtleCoin is moving towards
+v2 and also moving to wTRTL in the meantime. TurtleCoin software is EOL and
+TurtlePay will shut down on Jan 31, 2022, which deprecates both of the payment
+gateways. Further development is not planned until the TRTL ecosystem has
+switched to v2.**
+
+**See https://github.com/turtlecoin/turtlecoin/releases
+and https://blog.turtlecoin.com/wtrtl-launch/**
 
 Issue Handling is done on Drupal.org:
 [Drupal Project Page](https://www.drupal.org/sandbox/daveiano/3029539)
